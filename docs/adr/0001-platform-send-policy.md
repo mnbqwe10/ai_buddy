@@ -1,0 +1,3 @@
+# Platform send policy
+
+The extension distinguishes **AI Chat Platforms** from **Messaging Platforms** because messaging surfaces such as WhatsApp, Telegram, and Discord can have a changing human recipient. We decided that **AI Chat Platforms** may auto-submit prompts by default unless the user enables **Review Before Sending**, while **Messaging Platforms** may auto-submit only when the user enables session-only **Auto-Send Lock** in the side panel after opening the intended bot dialog. When **Auto-Send Lock** is off, messaging platforms may draft prompts but must not send them, reducing accidental messages while preserving a fast workflow.

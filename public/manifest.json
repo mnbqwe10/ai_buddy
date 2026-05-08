@@ -1,0 +1,81 @@
+{
+  "manifest_version": 3,
+  "name": "AI Buddy",
+  "version": "0.1.0",
+  "description": "Scenario-based AI sidebar actions for selected browser text.",
+  "icons": {
+    "64": "logo.png"
+  },
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://chat.deepseek.com/*",
+    "https://web.whatsapp.com/*",
+    "https://web.telegram.org/*",
+    "https://discord.com/*",
+    "https://m365.cloud.microsoft/*"
+  ],
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "AI Buddy",
+    "default_popup": "popup.html",
+    "default_icon": "logo.png"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["assets/content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://chat.deepseek.com/*",
+        "https://m365.cloud.microsoft/*"
+      ],
+      "js": ["assets/aiChatBridge.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://web.telegram.org/*",
+        "https://discord.com/*"
+      ],
+      "js": ["assets/messagingBridge.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Ctrl+Space",
+        "mac": "Command+Space"
+      },
+      "description": "Open AI Buddy side panel"
+    }
+  }
+}
