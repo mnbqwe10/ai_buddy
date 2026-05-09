@@ -8,6 +8,17 @@ interface BridgeMessage {
   submit?: boolean;
 }
 
+type BridgeResult = { ok: true; mode: "sent" | "drafted" } | { ok: false; error: string };
+
+const sendButtonWaitMs = 3_000;
+const sendButtonPollMs = 50;
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
 function visible(element: Element) {
   const rect = element.getBoundingClientRect();
   return rect.width > 0 && rect.height > 0;
@@ -55,16 +66,16 @@ function setComposerText(
     return true;
   }
 
-  if (composer.isContentEditable || composer.getAttribute("contenteditable") === "true") {
+  if (composer.isContentEditable || composer.hasAttribute("contenteditable")) {
     const selection = window.getSelection();
     const range = document.createRange();
     range.selectNodeContents(composer);
-    range.collapse(false);
     selection?.removeAllRanges();
     selection?.addRange(range);
-    const inserted = document.execCommand("insertText", false, promptText);
-    if (!inserted) {
-      composer.textContent = promptText;
+    const inserted =
+      typeof document.execCommand === "function" && document.execCommand("insertText", false, promptText);
+    if (!inserted || composer.textContent !== promptText) {
+      composer.replaceChildren(document.createTextNode(promptText));
     }
     composer.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: promptText }));
     return true;
@@ -73,28 +84,62 @@ function setComposerText(
   return false;
 }
 
-function findSendButton(doc = document): HTMLButtonElement | null {
+function buttonIsEnabled(button: HTMLButtonElement) {
+  return (
+    !button.disabled &&
+    button.getAttribute("aria-disabled") !== "true" &&
+    button.getAttribute("data-disabled") !== "true"
+  );
+}
+
+function findSendButtonCandidates(doc = document): HTMLButtonElement[] {
   const selectors = [
     "button[aria-label*='send' i]",
+    "button[title*='send' i]",
     "button[data-testid*='send' i]",
     "button[type='submit']",
+    "button.btn-send",
+    "button.Button.send",
   ];
+  const candidates = new Set<HTMLButtonElement>();
 
   for (const selector of selectors) {
-    const button = doc.querySelector<HTMLButtonElement>(selector);
-    if (button && !button.disabled && visible(button)) {
+    for (const button of doc.querySelectorAll<HTMLButtonElement>(selector)) {
+      candidates.add(button);
+    }
+  }
+
+  return Array.from(candidates);
+}
+
+function findSendButton(doc = document): HTMLButtonElement | null {
+  return findSendButtonCandidates(doc).find((button) => buttonIsEnabled(button) && visible(button)) ?? null;
+}
+
+async function waitForSendButton(doc = document) {
+  const deadline = Date.now() + sendButtonWaitMs;
+
+  while (Date.now() <= deadline) {
+    const button = findSendButton(doc);
+    if (button) {
       return button;
     }
+
+    await delay(sendButtonPollMs);
   }
 
   return null;
 }
 
-function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
-  const button = findSendButton();
+async function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  const button = await waitForSendButton();
   if (button) {
     button.click();
     return true;
+  }
+
+  if (findSendButtonCandidates().length > 0) {
+    return false;
   }
 
   composer.dispatchEvent(
@@ -110,7 +155,7 @@ function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputE
   return true;
 }
 
-function injectPrompt(promptText: string, submit: boolean) {
+export async function injectPrompt(promptText: string, submit: boolean): Promise<BridgeResult> {
   const composer = findComposer();
   if (!composer) {
     return { ok: false, error: "Messaging composer not found" };
@@ -120,14 +165,14 @@ function injectPrompt(promptText: string, submit: boolean) {
     return { ok: false, error: "Unable to draft message" };
   }
 
-  if (submit && !submitComposer(composer)) {
-    return { ok: false, error: "Unable to send message" };
+  if (submit && !(await submitComposer(composer))) {
+    return { ok: false, error: "Message drafted, but the send button was not ready." };
   }
 
   return { ok: true, mode: submit ? "sent" : "drafted" };
 }
 
-window.addEventListener("message", (event) => {
+async function handleBridgeMessage(event: MessageEvent) {
   const message = event.data as BridgeMessage;
   if (!message || message.source !== bridgeSource) {
     return;
@@ -145,7 +190,7 @@ window.addEventListener("message", (event) => {
     return;
   }
 
-  const result = injectPrompt(message.promptText, Boolean(message.submit));
+  const result = await injectPrompt(message.promptText, Boolean(message.submit));
   sourceWindow?.postMessage(
     {
       source: bridgeSource,
@@ -155,6 +200,10 @@ window.addEventListener("message", (event) => {
     },
     targetOrigin,
   );
+}
+
+window.addEventListener("message", (event) => {
+  void handleBridgeMessage(event);
 });
 
 export {};
