@@ -51,10 +51,15 @@
         "https://chat.openai.com/*",
         "https://claude.ai/*",
         "https://gemini.google.com/*",
-        "https://chat.deepseek.com/*",
-        "https://copilot.microsoft.com/*"
+        "https://chat.deepseek.com/*"
       ],
       "js": ["assets/aiChatBridge.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://copilot.microsoft.com/*"],
+      "js": ["assets/copilotBridge.js"],
       "all_frames": true,
       "run_at": "document_idle"
     },

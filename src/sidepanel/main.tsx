@@ -7,14 +7,9 @@ import { sidePanelPortName } from "../background/promptRouter";
 import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
 import { useAppState } from "../shared/useAppState";
+import { bridgeSourceForPlatform } from "./platformBridge";
 import { messageOriginForPlatformUrl, minimumFrameWidthForPlatform } from "./platformFrame";
 import "./styles.css";
-
-function bridgeSourceForPlatformType(platformType: string) {
-  return platformType === "messaging"
-    ? "ai-buddy-messaging-bridge"
-    : "ai-buddy-ai-chat-bridge";
-}
 
 function isDeliverPromptMessage(message: unknown): message is Extract<RuntimeMessage, { type: "deliver-prompt" }> {
   return Boolean(
@@ -44,7 +39,7 @@ function SidePanelApp() {
     effectiveState.platforms.find((platform) => platform.id === effectiveState.settings.activePlatformId) ??
     effectiveState.platforms[0];
   const canUseBridge = activePlatform.type === "aiChat" || activePlatform.type === "messaging";
-  const bridgeSource = bridgeSourceForPlatformType(activePlatform.type);
+  const bridgeSource = bridgeSourceForPlatform(activePlatform.id, activePlatform.type);
   const minimumFrameWidth = minimumFrameWidthForPlatform(activePlatform.id);
   const platformMessageOrigin = messageOriginForPlatformUrl(activePlatform.url);
   const sendMode = resolveSendMode({

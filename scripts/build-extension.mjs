@@ -31,6 +31,11 @@ const classicScripts = [
     globalName: "AiBuddyAiChatBridge",
   },
   {
+    entry: resolve(root, "src/platforms/copilotBridge.ts"),
+    fileName: "copilotBridge",
+    globalName: "AiBuddyCopilotBridge",
+  },
+  {
     entry: resolve(root, "src/platforms/messagingBridge.ts"),
     fileName: "messagingBridge",
     globalName: "AiBuddyMessagingBridge",
