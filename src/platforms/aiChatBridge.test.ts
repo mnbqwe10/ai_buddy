@@ -31,4 +31,20 @@ describe("AI chat bridge", () => {
     expect(composer.value).toBe("Second prompt");
     expect(clickSend).toHaveBeenCalledTimes(1);
   });
+
+  it("drafts into a Gemini-style composer inside an open shadow root", async () => {
+    const host = document.createElement("rich-textarea");
+    const shadow = host.attachShadow({ mode: "open" });
+    const composer = document.createElement("div");
+    composer.setAttribute("contenteditable", "plaintext-only");
+    composer.setAttribute("role", "textbox");
+    composer.setAttribute("aria-label", "Prompt");
+    shadow.append(composer);
+    document.body.append(host);
+
+    const result = await injectPrompt("Explain this", false);
+
+    expect(result).toEqual({ ok: true, mode: "drafted" });
+    expect(composer.textContent).toBe("Explain this");
+  });
 });

@@ -19,10 +19,24 @@ const sendButtonSelectors = [
   "button[type='submit']",
 ];
 
+type SearchRoot = Document | ShadowRoot | Element;
+
 function delay(ms: number) {
   return new Promise<void>((resolve) => {
     window.setTimeout(resolve, ms);
   });
+}
+
+function querySelectorAllDeep<T extends Element>(root: SearchRoot, selector: string): T[] {
+  const results = Array.from(root.querySelectorAll<T>(selector));
+
+  for (const element of Array.from(root.querySelectorAll<Element>("*"))) {
+    if (element.shadowRoot) {
+      results.push(...querySelectorAllDeep<T>(element.shadowRoot, selector));
+    }
+  }
+
+  return results;
 }
 
 function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLInputElement | null {
@@ -32,13 +46,19 @@ function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLI
     "[aria-label='Enter a prompt here']",
     "[aria-label*='prompt' i]",
     "[aria-label*='message' i]",
+    "[role='textbox'][contenteditable]",
+    "[contenteditable='plaintext-only']",
     "[contenteditable='true']",
+    "[contenteditable]",
     ".ProseMirror",
     "textarea",
   ];
 
   for (const selector of selectors) {
-    const element = doc.querySelector<HTMLElement | HTMLTextAreaElement | HTMLInputElement>(selector);
+    const element = querySelectorAllDeep<HTMLElement | HTMLTextAreaElement | HTMLInputElement>(
+      doc,
+      selector,
+    )[0];
     if (element && !("disabled" in element && element.disabled)) {
       return element;
     }
@@ -68,17 +88,17 @@ function setComposerText(
     return true;
   }
 
-  if (composer.isContentEditable || composer.getAttribute("contenteditable") === "true") {
+  if (composer.isContentEditable || composer.hasAttribute("contenteditable")) {
     const selection = window.getSelection();
     const range = document.createRange();
     range.selectNodeContents(composer);
-    range.collapse(false);
     selection?.removeAllRanges();
     selection?.addRange(range);
 
-    const inserted = document.execCommand("insertText", false, promptText);
-    if (!inserted) {
-      composer.textContent = promptText;
+    const inserted =
+      typeof document.execCommand === "function" && document.execCommand("insertText", false, promptText);
+    if (!inserted || composer.textContent !== promptText) {
+      composer.replaceChildren(document.createTextNode(promptText));
     }
     composer.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: promptText }));
     return true;
