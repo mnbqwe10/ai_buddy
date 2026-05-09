@@ -52,4 +52,26 @@ describe("messaging bridge", () => {
     expect(clickSend).toHaveBeenCalledTimes(1);
     expect(enterSend).not.toHaveBeenCalled();
   });
+
+  it("dispatches a Discord-compatible Enter sequence when no send button exists", async () => {
+    const composer = document.createElement("div");
+    composer.setAttribute("role", "textbox");
+    composer.setAttribute("contenteditable", "true");
+    markVisible(composer);
+
+    const enterEvents: string[] = [];
+    for (const eventName of ["keydown", "keypress", "keyup"]) {
+      composer.addEventListener(eventName, (event) => {
+        enterEvents.push(`${event.type}:${(event as KeyboardEvent).key}`);
+      });
+    }
+
+    document.body.append(composer);
+
+    const result = await injectPrompt("Send this to Discord", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(composer.textContent).toBe("Send this to Discord");
+    expect(enterEvents).toEqual(["keydown:Enter", "keypress:Enter", "keyup:Enter"]);
+  });
 });

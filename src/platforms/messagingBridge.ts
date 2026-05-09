@@ -11,6 +11,7 @@ interface BridgeMessage {
 type BridgeResult = { ok: true; mode: "sent" | "drafted" } | { ok: false; error: string };
 
 const sendButtonWaitMs = 3_000;
+const sendButtonDiscoveryWaitMs = 250;
 const sendButtonPollMs = 50;
 
 function delay(ms: number) {
@@ -118,40 +119,55 @@ function findSendButton(doc = document): HTMLButtonElement | null {
 
 async function waitForSendButton(doc = document) {
   const deadline = Date.now() + sendButtonWaitMs;
+  const discoveryDeadline = Date.now() + sendButtonDiscoveryWaitMs;
+  let sawCandidate = false;
 
   while (Date.now() <= deadline) {
-    const button = findSendButton(doc);
+    const candidates = findSendButtonCandidates(doc);
+    sawCandidate = sawCandidate || candidates.length > 0;
+    const button = candidates.find((candidate) => buttonIsEnabled(candidate) && visible(candidate)) ?? null;
     if (button) {
-      return button;
+      return { button, sawCandidate };
+    }
+
+    if (!sawCandidate && Date.now() > discoveryDeadline) {
+      return { button: null, sawCandidate };
     }
 
     await delay(sendButtonPollMs);
   }
 
-  return null;
+  return { button: null, sawCandidate };
+}
+
+function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  for (const type of ["keydown", "keypress", "keyup"]) {
+    composer.dispatchEvent(
+      new KeyboardEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        key: "Enter",
+        code: "Enter",
+        keyCode: 13,
+        which: 13,
+        charCode: type === "keypress" ? 13 : 0,
+      }),
+    );
+  }
 }
 
 async function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
-  const button = await waitForSendButton();
+  const { button, sawCandidate } = await waitForSendButton();
   if (button) {
     button.click();
     return true;
   }
 
-  if (findSendButtonCandidates().length > 0) {
+  if (sawCandidate) {
     return false;
   }
 
-  composer.dispatchEvent(
-    new KeyboardEvent("keydown", {
-      bubbles: true,
-      cancelable: true,
-      key: "Enter",
-      code: "Enter",
-      keyCode: 13,
-      which: 13,
-    }),
-  );
+  dispatchEnter(composer);
   return true;
 }
 
