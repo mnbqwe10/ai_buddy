@@ -21,7 +21,7 @@
     "https://web.whatsapp.com/*",
     "https://web.telegram.org/*",
     "https://discord.com/*",
-    "https://m365.cloud.microsoft/*"
+    "https://copilot.microsoft.com/*"
   ],
   "background": {
     "service_worker": "assets/background.js",
@@ -52,7 +52,7 @@
         "https://claude.ai/*",
         "https://gemini.google.com/*",
         "https://chat.deepseek.com/*",
-        "https://m365.cloud.microsoft/*"
+        "https://copilot.microsoft.com/*"
       ],
       "js": ["assets/aiChatBridge.js"],
       "all_frames": true,

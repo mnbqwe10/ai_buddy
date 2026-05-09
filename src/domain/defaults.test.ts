@@ -38,6 +38,11 @@ describe("starter defaults", () => {
       "discord",
       "copilot",
     ]);
+    expect(state.platforms.find((platform) => platform.id === "copilot")).toMatchObject({
+      name: "Microsoft Copilot",
+      url: "https://copilot.microsoft.com/",
+      hostPattern: "https://copilot.microsoft.com/*",
+    });
     expect(state.actions.find((action) => action.id === "translate")?.config?.translationTargetLanguage).toBe(
       defaultTranslationTargetLanguage,
     );
@@ -70,6 +75,34 @@ describe("starter defaults", () => {
     expect(settings.actionButtonStyle).toBe("iconOnly");
     expect(settings.toolbarEnabled).toBe(false);
     expect(settings.blockedSites).toEqual(["example.com"]);
+  });
+
+  it("refreshes built-in platform metadata from current defaults", () => {
+    const state = createDefaultAppState();
+    const legacy = normalizeAppState({
+      ...state,
+      platforms: state.platforms.map((platform) =>
+        platform.id === "copilot"
+          ? {
+              ...platform,
+              name: "Microsoft 365 Copilot",
+              url: "https://m365.cloud.microsoft/chat",
+              hostPattern: "https://m365.cloud.microsoft/*",
+            }
+          : platform,
+      ),
+      settings: {
+        ...state.settings,
+        activePlatformId: "copilot",
+      },
+    });
+
+    expect(legacy.platforms.find((platform) => platform.id === "copilot")).toMatchObject({
+      name: "Microsoft Copilot",
+      url: "https://copilot.microsoft.com/",
+      hostPattern: "https://copilot.microsoft.com/*",
+    });
+    expect(legacy.settings.activePlatformId).toBe("copilot");
   });
 
   it("restores missing defaults without overwriting user edits", () => {

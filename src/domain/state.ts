@@ -5,7 +5,16 @@ import {
   defaultPlatforms,
   defaultScenarios,
 } from "./defaults";
-import type { Action, ActionButtonStyle, ActionType, AppState, ChatPlatform, Scenario, UserSettings } from "./model";
+import type {
+  Action,
+  ActionButtonStyle,
+  ActionType,
+  AppState,
+  ChatPlatform,
+  PlatformType,
+  Scenario,
+  UserSettings,
+} from "./model";
 
 function mergeById<T extends { id: string }>(current: T[] | undefined, defaults: T[]): T[] {
   const existing = Array.isArray(current) ? current : [];
@@ -22,6 +31,7 @@ function knownIds<T extends { id: string }>(items: T[]): Set<string> {
 
 const actionTypes = new Set<ActionType>(["local", "prompt", "inputPrompt", "panel"]);
 const actionButtonStyles = new Set<ActionButtonStyle>(["iconOnly", "iconText"]);
+const platformTypes = new Set<PlatformType>(["aiChat", "messaging"]);
 const legacyIconTextByName: Record<string, string> = {
   "Cp": "copy",
   "?": "question-mark",
@@ -130,6 +140,36 @@ function normalizeScenario(rawScenario: Partial<Scenario>, defaultScenario?: Sce
   };
 }
 
+function normalizePlatform(rawPlatform: Partial<ChatPlatform>, defaultPlatform?: ChatPlatform): ChatPlatform {
+  if (defaultPlatform) {
+    return structuredClone(defaultPlatform);
+  }
+
+  const fallback = defaultPlatforms[0];
+  const rawType = rawPlatform.type as PlatformType | undefined;
+  const id =
+    typeof rawPlatform.id === "string" && rawPlatform.id.trim()
+      ? rawPlatform.id
+      : fallback.id;
+
+  return {
+    id,
+    name:
+      typeof rawPlatform.name === "string" && rawPlatform.name.trim()
+        ? rawPlatform.name
+        : id,
+    type: rawType && platformTypes.has(rawType) ? rawType : fallback.type,
+    url:
+      typeof rawPlatform.url === "string" && rawPlatform.url.trim()
+        ? rawPlatform.url
+        : fallback.url,
+    hostPattern:
+      typeof rawPlatform.hostPattern === "string" && rawPlatform.hostPattern.trim()
+        ? rawPlatform.hostPattern
+        : fallback.hostPattern,
+  };
+}
+
 export function normalizeSettings(
   rawSettings: Partial<UserSettings> | undefined,
   scenarios: Scenario[],
@@ -180,7 +220,13 @@ export function normalizeAppState(rawState: Partial<AppState> | undefined): AppS
   const defaultActionsById = new Map(defaultActions.map((action) => [action.id, action]));
   const rawActions = Array.isArray(state.actions) ? (state.actions as Partial<Action>[]) : defaultActions;
   const actions = rawActions.map((action) => normalizeAction(action, defaultActionsById.get(action.id ?? "")));
-  const platforms = Array.isArray(state.platforms) ? (state.platforms as ChatPlatform[]) : defaultPlatforms;
+  const defaultPlatformsById = new Map(defaultPlatforms.map((platform) => [platform.id, platform]));
+  const rawPlatforms = Array.isArray(state.platforms)
+    ? (state.platforms as Partial<ChatPlatform>[])
+    : defaultPlatforms;
+  const platforms = rawPlatforms.map((platform) =>
+    normalizePlatform(platform, defaultPlatformsById.get(platform.id ?? "")),
+  );
 
   if (scenarios.length === 0) {
     scenarios = [structuredClone(defaultScenarios[0])];

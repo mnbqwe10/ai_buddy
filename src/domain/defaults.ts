@@ -197,10 +197,10 @@ export const defaultPlatforms: ChatPlatform[] = [
   },
   {
     id: "copilot",
-    name: "Microsoft 365 Copilot",
+    name: "Microsoft Copilot",
     type: "aiChat",
-    url: "https://m365.cloud.microsoft/chat",
-    hostPattern: "https://m365.cloud.microsoft/*",
+    url: "https://copilot.microsoft.com/",
+    hostPattern: "https://copilot.microsoft.com/*",
   },
 ];
 
