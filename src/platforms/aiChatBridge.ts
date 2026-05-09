@@ -39,6 +39,11 @@ function querySelectorAllDeep<T extends Element>(root: SearchRoot, selector: str
   return results;
 }
 
+function visible(element: Element) {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
 function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLInputElement | null {
   const selectors = [
     "#prompt-textarea",
@@ -55,10 +60,9 @@ function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLI
   ];
 
   for (const selector of selectors) {
-    const element = querySelectorAllDeep<HTMLElement | HTMLTextAreaElement | HTMLInputElement>(
-      doc,
-      selector,
-    )[0];
+    const elements = querySelectorAllDeep<HTMLElement | HTMLTextAreaElement | HTMLInputElement>(doc, selector)
+      .filter((candidate) => !("disabled" in candidate && candidate.disabled));
+    const element = elements.filter(visible).at(-1) ?? elements.at(-1);
     if (element && !("disabled" in element && element.disabled)) {
       return element;
     }
@@ -76,6 +80,22 @@ function setNativeValue(element: HTMLTextAreaElement | HTMLInputElement, value: 
   descriptor?.set?.call(element, value);
 }
 
+function dispatchTextInputEvent(
+  element: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  type: "beforeinput" | "input",
+  inputType: string,
+  data: string,
+) {
+  const event = new InputEvent(type, {
+    bubbles: true,
+    cancelable: type === "beforeinput",
+    inputType,
+    data,
+  });
+
+  return element.dispatchEvent(event);
+}
+
 function setComposerText(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
@@ -83,6 +103,7 @@ function setComposerText(
   composer.focus();
 
   if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
+    dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
     setNativeValue(composer, promptText);
     composer.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: promptText }));
     return true;
@@ -95,12 +116,15 @@ function setComposerText(
     selection?.removeAllRanges();
     selection?.addRange(range);
 
+    const shouldInsert = dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
     const inserted =
-      typeof document.execCommand === "function" && document.execCommand("insertText", false, promptText);
+      shouldInsert &&
+      typeof document.execCommand === "function" &&
+      document.execCommand("insertText", false, promptText);
     if (!inserted || composer.textContent !== promptText) {
       composer.replaceChildren(document.createTextNode(promptText));
     }
-    composer.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: promptText }));
+    dispatchTextInputEvent(composer, "input", "insertText", promptText);
     return true;
   }
 

@@ -7,7 +7,7 @@ import { sidePanelPortName } from "../background/promptRouter";
 import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
 import { useAppState } from "../shared/useAppState";
-import { minimumFrameWidthForPlatform } from "./platformFrame";
+import { messageOriginForPlatformUrl, minimumFrameWidthForPlatform } from "./platformFrame";
 import "./styles.css";
 
 function bridgeSourceForPlatformType(platformType: string) {
@@ -46,6 +46,7 @@ function SidePanelApp() {
   const canUseBridge = activePlatform.type === "aiChat" || activePlatform.type === "messaging";
   const bridgeSource = bridgeSourceForPlatformType(activePlatform.type);
   const minimumFrameWidth = minimumFrameWidthForPlatform(activePlatform.id);
+  const platformMessageOrigin = messageOriginForPlatformUrl(activePlatform.url);
   const sendMode = resolveSendMode({
     platform: activePlatform,
     autoSendLockEnabled,
@@ -61,9 +62,9 @@ function SidePanelApp() {
         source: bridgeSource,
         type: "bridge-ping",
       },
-      activePlatform.url,
+      platformMessageOrigin,
     );
-  }, [activePlatform.url, bridgeSource, canUseBridge]);
+  }, [bridgeSource, canUseBridge, platformMessageOrigin]);
 
   useEffect(() => {
     if (typeof chrome === "undefined") {
@@ -177,10 +178,10 @@ function SidePanelApp() {
         promptText: pendingPrompt.promptText,
         submit: sendMode === "autoSubmit",
       },
-      activePlatform.url,
+      platformMessageOrigin,
     );
     setPendingPrompt(null);
-  }, [activePlatform.url, bridgeSource, canUseBridge, isBridgeReady, pendingPrompt, sendMode]);
+  }, [bridgeSource, canUseBridge, isBridgeReady, pendingPrompt, platformMessageOrigin, sendMode]);
 
   return (
     <main className="sidepanel-shell">
@@ -230,6 +231,7 @@ function SidePanelApp() {
             ref={iframeRef}
             title={activePlatform.name}
             src={activePlatform.url}
+            allow="clipboard-read; clipboard-write"
             style={minimumFrameWidth ? { minWidth: minimumFrameWidth, width: minimumFrameWidth } : undefined}
             onLoad={() => {
               setIsIframeReady(true);

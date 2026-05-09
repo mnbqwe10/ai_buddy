@@ -47,4 +47,33 @@ describe("AI chat bridge", () => {
     expect(result).toEqual({ ok: true, mode: "drafted" });
     expect(composer.textContent).toBe("Explain this");
   });
+
+  it("updates rich editor state before sending a Gemini-style prompt", async () => {
+    const composer = document.createElement("div");
+    composer.setAttribute("contenteditable", "true");
+    composer.setAttribute("role", "textbox");
+    composer.setAttribute("aria-label", "Enter a prompt here");
+    const sendButton = document.createElement("button");
+    sendButton.setAttribute("aria-label", "Send");
+    sendButton.disabled = true;
+    const clickSend = vi.fn();
+
+    sendButton.addEventListener("click", clickSend);
+    composer.addEventListener("beforeinput", (event) => {
+      const inputEvent = event as InputEvent;
+      if (inputEvent.inputType === "insertText") {
+        event.preventDefault();
+        composer.textContent = inputEvent.data;
+        sendButton.disabled = false;
+      }
+    });
+
+    document.body.append(composer, sendButton);
+
+    const result = await injectPrompt("Ask Gemini", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(composer.textContent).toBe("Ask Gemini");
+    expect(clickSend).toHaveBeenCalledTimes(1);
+  });
 });

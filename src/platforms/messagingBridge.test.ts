@@ -28,18 +28,22 @@ describe("messaging bridge", () => {
     composer.setAttribute("contenteditable", "true");
     markVisible(composer);
 
-    const sendButton = document.createElement("button");
-    sendButton.setAttribute("aria-label", "Send Message");
-    sendButton.disabled = true;
+    const sendButton = document.createElement("div");
+    sendButton.setAttribute("role", "button");
+    sendButton.setAttribute("title", "Send Message");
+    sendButton.setAttribute("aria-disabled", "true");
     markVisible(sendButton);
 
     const clickSend = vi.fn();
     const enterSend = vi.fn();
     sendButton.addEventListener("click", clickSend);
     composer.addEventListener("keydown", enterSend);
-    composer.addEventListener("input", () => {
+    composer.addEventListener("beforeinput", (event) => {
+      const inputEvent = event as InputEvent;
+      event.preventDefault();
+      composer.textContent = inputEvent.data;
       window.setTimeout(() => {
-        sendButton.disabled = false;
+        sendButton.setAttribute("aria-disabled", "false");
       }, 25);
     });
 

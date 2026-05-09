@@ -55,6 +55,22 @@ function setNativeValue(element: HTMLTextAreaElement | HTMLInputElement, value: 
   descriptor?.set?.call(element, value);
 }
 
+function dispatchTextInputEvent(
+  element: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  type: "beforeinput" | "input",
+  inputType: string,
+  data: string,
+) {
+  const event = new InputEvent(type, {
+    bubbles: true,
+    cancelable: type === "beforeinput",
+    inputType,
+    data,
+  });
+
+  return element.dispatchEvent(event);
+}
+
 function setComposerText(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
@@ -62,8 +78,9 @@ function setComposerText(
   composer.focus();
 
   if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
+    dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
     setNativeValue(composer, promptText);
-    composer.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: promptText }));
+    dispatchTextInputEvent(composer, "input", "insertText", promptText);
     return true;
   }
 
@@ -73,48 +90,57 @@ function setComposerText(
     range.selectNodeContents(composer);
     selection?.removeAllRanges();
     selection?.addRange(range);
+    const shouldInsert = dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
     const inserted =
-      typeof document.execCommand === "function" && document.execCommand("insertText", false, promptText);
+      shouldInsert &&
+      typeof document.execCommand === "function" &&
+      document.execCommand("insertText", false, promptText);
     if (!inserted || composer.textContent !== promptText) {
       composer.replaceChildren(document.createTextNode(promptText));
     }
-    composer.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: promptText }));
+    dispatchTextInputEvent(composer, "input", "insertText", promptText);
     return true;
   }
 
   return false;
 }
 
-function buttonIsEnabled(button: HTMLButtonElement) {
+function controlIsEnabled(element: HTMLElement) {
   return (
-    !button.disabled &&
-    button.getAttribute("aria-disabled") !== "true" &&
-    button.getAttribute("data-disabled") !== "true"
+    !("disabled" in element && element.disabled) &&
+    element.getAttribute("aria-disabled") !== "true" &&
+    element.getAttribute("data-disabled") !== "true"
   );
 }
 
-function findSendButtonCandidates(doc = document): HTMLButtonElement[] {
+function findSendControlCandidates(doc = document): HTMLElement[] {
   const selectors = [
     "button[aria-label*='send' i]",
     "button[title*='send' i]",
     "button[data-testid*='send' i]",
     "button[type='submit']",
+    "[role='button'][aria-label*='send' i]",
+    "[role='button'][title*='send' i]",
+    "[aria-label*='send' i]",
+    "[title*='send' i]",
     "button.btn-send",
     "button.Button.send",
+    ".btn-send",
+    ".Button.send",
   ];
-  const candidates = new Set<HTMLButtonElement>();
+  const candidates = new Set<HTMLElement>();
 
   for (const selector of selectors) {
-    for (const button of doc.querySelectorAll<HTMLButtonElement>(selector)) {
-      candidates.add(button);
+    for (const element of doc.querySelectorAll<HTMLElement>(selector)) {
+      candidates.add(element.closest<HTMLElement>("button,[role='button']") ?? element);
     }
   }
 
   return Array.from(candidates);
 }
 
-function findSendButton(doc = document): HTMLButtonElement | null {
-  return findSendButtonCandidates(doc).find((button) => buttonIsEnabled(button) && visible(button)) ?? null;
+function findSendControl(doc = document): HTMLElement | null {
+  return findSendControlCandidates(doc).find((element) => controlIsEnabled(element) && visible(element)) ?? null;
 }
 
 async function waitForSendButton(doc = document) {
@@ -123,21 +149,21 @@ async function waitForSendButton(doc = document) {
   let sawCandidate = false;
 
   while (Date.now() <= deadline) {
-    const candidates = findSendButtonCandidates(doc);
+    const candidates = findSendControlCandidates(doc);
     sawCandidate = sawCandidate || candidates.length > 0;
-    const button = candidates.find((candidate) => buttonIsEnabled(candidate) && visible(candidate)) ?? null;
-    if (button) {
-      return { button, sawCandidate };
+    const control = candidates.find((candidate) => controlIsEnabled(candidate) && visible(candidate)) ?? null;
+    if (control) {
+      return { control, sawCandidate };
     }
 
     if (!sawCandidate && Date.now() > discoveryDeadline) {
-      return { button: null, sawCandidate };
+      return { control: null, sawCandidate };
     }
 
     await delay(sendButtonPollMs);
   }
 
-  return { button: null, sawCandidate };
+  return { control: null, sawCandidate };
 }
 
 function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
@@ -156,10 +182,23 @@ function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputEl
   }
 }
 
+function activateControl(control: HTMLElement) {
+  for (const type of ["pointerdown", "mousedown", "pointerup", "mouseup", "click"]) {
+    control.dispatchEvent(
+      new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        buttons: type.endsWith("down") ? 1 : 0,
+      }),
+    );
+  }
+}
+
 async function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
-  const { button, sawCandidate } = await waitForSendButton();
-  if (button) {
-    button.click();
+  const { control, sawCandidate } = await waitForSendButton();
+  if (control) {
+    activateControl(control);
     return true;
   }
 
