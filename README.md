@@ -1,6 +1,19 @@
 # AI Buddy
 
+Tired of copying page text, switching tabs, and pasting the same context into your AI bot? AI Buddy lets you select text on any page, choose an action, and send a ready-made prompt to your preferred chat platform from Chrome's side panel.
+
+[中文说明](docs/README.zh-CN.md)
+
+![AI Buddy demo](docs/demo.gif)
+
 AI Buddy is a Chrome extension that adds a selection toolbar for sending selected page text to an AI chat platform. It opens the platform in Chrome's side panel and uses reusable scenario actions such as Explain, Translate, Summarize, Draft Reply, Polish, Brainstorm, and Visualize.
+
+## Important Notes
+
+- AI Buddy is a personal project. It is not affiliated with, endorsed by, sponsored by, or maintained by any AI chat platform or messaging platform.
+- You need to sign in to your own account on the target platform before using AI Buddy. The extension does not provide accounts, subscriptions, model access, or platform credentials.
+- AI Buddy stores only your extension configuration, such as preferences, scenarios, actions, platform choices, and language settings.
+- AI Buddy does not store your prompts or platform conversations. Selected text and generated prompts are sent to the chosen platform only when you trigger an action.
 
 ## Install Locally
 
