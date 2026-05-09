@@ -7,6 +7,7 @@ import { sidePanelPortName } from "../background/promptRouter";
 import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
 import { useAppState } from "../shared/useAppState";
+import { minimumFrameWidthForPlatform } from "./platformFrame";
 import "./styles.css";
 
 function bridgeSourceForPlatformType(platformType: string) {
@@ -44,6 +45,7 @@ function SidePanelApp() {
     effectiveState.platforms[0];
   const canUseBridge = activePlatform.type === "aiChat" || activePlatform.type === "messaging";
   const bridgeSource = bridgeSourceForPlatformType(activePlatform.type);
+  const minimumFrameWidth = minimumFrameWidthForPlatform(activePlatform.id);
   const sendMode = resolveSendMode({
     platform: activePlatform,
     autoSendLockEnabled,
@@ -222,12 +224,13 @@ function SidePanelApp() {
         )}
       </section>
 
-      <section className="chat-frame-panel">
+      <section className="chat-frame-panel" data-platform-id={activePlatform.id}>
         {canUseBridge ? (
           <iframe
             ref={iframeRef}
             title={activePlatform.name}
             src={activePlatform.url}
+            style={minimumFrameWidth ? { minWidth: minimumFrameWidth, width: minimumFrameWidth } : undefined}
             onLoad={() => {
               setIsIframeReady(true);
               setStatus(`${activePlatform.name} loaded, waiting for bridge...`);
