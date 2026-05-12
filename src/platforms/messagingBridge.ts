@@ -90,6 +90,81 @@ function dispatchTextInputEvent(
   return element.dispatchEvent(event);
 }
 
+function selectComposerContents(composer: HTMLElement) {
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(composer);
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
+
+function composerIsSlateEditor(composer: HTMLElement) {
+  return composer.getAttribute("data-slate-editor") === "true";
+}
+
+function createClipboardData(text: string): DataTransfer {
+  if (typeof DataTransfer === "function") {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", text);
+    return clipboardData;
+  }
+
+  const data = new Map<string, string>([["text/plain", text]]);
+  return {
+    dropEffect: "none",
+    effectAllowed: "uninitialized",
+    files: [] as unknown as FileList,
+    items: [] as unknown as DataTransferItemList,
+    types: ["text/plain"],
+    clearData: (format?: string) => {
+      if (format) {
+        data.delete(format);
+      } else {
+        data.clear();
+      }
+    },
+    getData: (format: string) => data.get(format) ?? "",
+    setData: (format: string, value: string) => {
+      data.set(format, value);
+    },
+    setDragImage: () => {},
+  } as DataTransfer;
+}
+
+function createPasteEvent(text: string) {
+  const clipboardData = createClipboardData(text);
+
+  const event = (typeof ClipboardEvent === "function"
+    ? new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      })
+    : new Event("paste", {
+        bubbles: true,
+        cancelable: true,
+      })) as ClipboardEvent;
+
+  if (!event.clipboardData) {
+    Object.defineProperty(event, "clipboardData", {
+      configurable: true,
+      value: clipboardData,
+    });
+  }
+
+  return event;
+}
+
+function pasteComposerText(composer: HTMLElement, promptText: string) {
+  selectComposerContents(composer);
+  const event = createPasteEvent(promptText);
+  const pasteWasNotPrevented = composer.dispatchEvent(event);
+
+  if (pasteWasNotPrevented && normalizeComposerText(composer.textContent ?? "") !== normalizeComposerText(promptText)) {
+    document.execCommand("insertText", false, promptText);
+  }
+}
+
 function setComposerText(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
@@ -104,17 +179,21 @@ function setComposerText(
   }
 
   if (composer.isContentEditable || composer.hasAttribute("contenteditable")) {
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(composer);
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-    const shouldInsert = dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
-    const inserted =
-      shouldInsert &&
-      typeof document.execCommand === "function" &&
-      document.execCommand("insertText", false, promptText);
-    if (!inserted || composer.textContent !== promptText) {
+    if (composerIsSlateEditor(composer)) {
+      pasteComposerText(composer, promptText);
+    } else {
+      selectComposerContents(composer);
+      const shouldInsert = dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
+      const inserted =
+        shouldInsert &&
+        typeof document.execCommand === "function" &&
+        document.execCommand("insertText", false, promptText);
+      if (!inserted || composer.textContent !== promptText) {
+        composer.replaceChildren(document.createTextNode(promptText));
+      }
+    }
+
+    if (normalizeComposerText(composer.textContent ?? "") !== normalizeComposerText(promptText)) {
       composer.replaceChildren(document.createTextNode(promptText));
     }
     dispatchTextInputEvent(composer, "input", "insertText", promptText);
@@ -152,6 +231,10 @@ function rejectionReasonForSendControl(element: HTMLElement) {
 
   if (classList.includes("record") || label.includes("record") || label.includes("voice")) {
     return "record-control";
+  }
+
+  if (label.includes("gift") || label.includes("nitro")) {
+    return "non-message-send-control";
   }
 
   return undefined;
@@ -225,6 +308,15 @@ function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputEl
   }
 }
 
+function clearStaleComposerDom(composer: HTMLElement, promptText: string) {
+  if (normalizeComposerText(composer.textContent ?? "") !== normalizeComposerText(promptText)) {
+    return;
+  }
+
+  composer.replaceChildren();
+  dispatchTextInputEvent(composer, "input", "deleteContentBackward", "");
+}
+
 async function waitForPromptToLeaveComposer(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
@@ -265,6 +357,13 @@ async function submitComposer(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
 ) {
+  if (composer instanceof HTMLElement && composerIsSlateEditor(composer)) {
+    dispatchEnter(composer);
+    await delay(sendButtonPollMs);
+    clearStaleComposerDom(composer, promptText);
+    return true;
+  }
+
   const { control, sawCandidate } = await waitForSendButton();
   if (control) {
     activateControl(control);

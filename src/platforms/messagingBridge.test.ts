@@ -16,6 +16,18 @@ function markVisible(element: HTMLElement) {
   });
 }
 
+function createDiscordSlateComposer() {
+  const composer = document.createElement("div");
+  composer.setAttribute("role", "textbox");
+  composer.setAttribute("aria-multiline", "true");
+  composer.setAttribute("contenteditable", "true");
+  composer.setAttribute("data-slate-editor", "true");
+  composer.setAttribute("data-slate-node", "value");
+  composer.className = "markup__75297 editor__1b31f slateTextArea_ec4baf";
+  markVisible(composer);
+  return composer;
+}
+
 describe("messaging bridge", () => {
   afterEach(() => {
     document.body.innerHTML = "";
@@ -150,6 +162,86 @@ describe("messaging bridge", () => {
     expect(result).toEqual({ ok: true, mode: "sent" });
     expect(fakeComposer.textContent).toBe("");
     expect(realComposer.textContent).toBe("");
+  });
+
+  it("uses paste semantics for Discord Slate editors", async () => {
+    const composer = createDiscordSlateComposer();
+
+    const pasteSeen = vi.fn();
+    const enterSend = vi.fn();
+    composer.addEventListener("paste", (event) => {
+      pasteSeen();
+      event.preventDefault();
+      composer.textContent = event.clipboardData?.getData("text/plain") ?? "";
+    });
+    composer.addEventListener("keydown", (event) => {
+      if ((event as KeyboardEvent).key === "Enter") {
+        enterSend();
+        composer.textContent = "";
+      }
+    });
+
+    document.body.append(composer);
+
+    const result = await injectPrompt("Send this to Discord Slate", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(pasteSeen).toHaveBeenCalledTimes(1);
+    expect(enterSend).toHaveBeenCalledTimes(1);
+    expect(composer.textContent).toBe("");
+  });
+
+  it("does not click Discord gift controls that look like send actions", async () => {
+    const composer = createDiscordSlateComposer();
+
+    const giftButton = document.createElement("button");
+    giftButton.setAttribute("aria-label", "Send a gift");
+    markVisible(giftButton);
+
+    const clickGift = vi.fn();
+    const enterSend = vi.fn();
+    giftButton.addEventListener("click", clickGift);
+    composer.addEventListener("paste", (event) => {
+      event.preventDefault();
+      composer.textContent = event.clipboardData?.getData("text/plain") ?? "";
+    });
+    composer.addEventListener("keydown", (event) => {
+      if ((event as KeyboardEvent).key === "Enter") {
+        enterSend();
+        composer.textContent = "";
+      }
+    });
+
+    document.body.append(composer, giftButton);
+
+    const result = await injectPrompt("Do not open Nitro", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(clickGift).not.toHaveBeenCalled();
+    expect(enterSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears stale Discord Slate DOM after Enter sends from editor state", async () => {
+    const composer = createDiscordSlateComposer();
+
+    const enterSend = vi.fn();
+    composer.addEventListener("paste", (event) => {
+      event.preventDefault();
+      composer.textContent = event.clipboardData?.getData("text/plain") ?? "";
+    });
+    composer.addEventListener("keydown", (event) => {
+      if ((event as KeyboardEvent).key === "Enter") {
+        enterSend();
+      }
+    });
+
+    document.body.append(composer);
+
+    const result = await injectPrompt("Clear Discord ghost text", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(enterSend).toHaveBeenCalledTimes(1);
+    expect(composer.textContent).toBe("");
   });
 
   it("dispatches a Discord-compatible Enter sequence when no send button exists", async () => {
