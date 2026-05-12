@@ -29,7 +29,7 @@ function SidePanelApp() {
   const [isIframeReady, setIsIframeReady] = useState(false);
   const [isBridgeReady, setIsBridgeReady] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<PendingPrompt | null>(null);
-  const [autoSendLockEnabled, setAutoSendLockEnabled] = useState(false);
+  const [allowAutoSend, setAllowAutoSend] = useState(false);
   const effectiveState = state ?? createDefaultAppState();
 
   const activeScenario =
@@ -44,7 +44,7 @@ function SidePanelApp() {
   const platformMessageOrigin = messageOriginForPlatformUrl(activePlatform.url);
   const sendMode = resolveSendMode({
     platform: activePlatform,
-    autoSendLockEnabled,
+    allowAutoSend,
   });
 
   const pingBridge = useCallback(() => {
@@ -113,7 +113,7 @@ function SidePanelApp() {
   useEffect(() => {
     setIsIframeReady(false);
     setIsBridgeReady(false);
-    setAutoSendLockEnabled(false);
+    setAllowAutoSend(false);
     setStatus(`Loading ${activePlatform.name}...`);
   }, [activePlatform.id, activePlatform.name]);
 
@@ -155,7 +155,7 @@ function SidePanelApp() {
 
     window.addEventListener("message", handleBridgeMessage);
     return () => window.removeEventListener("message", handleBridgeMessage);
-  }, [activePlatform.name]);
+  }, [activePlatform.name, bridgeSource]);
 
   useEffect(() => {
     if (!pendingPrompt || !isBridgeReady || !iframeRef.current?.contentWindow || !canUseBridge) {
@@ -176,12 +176,36 @@ function SidePanelApp() {
       platformMessageOrigin,
     );
     setPendingPrompt(null);
-  }, [bridgeSource, canUseBridge, isBridgeReady, pendingPrompt, platformMessageOrigin, sendMode]);
+  }, [
+    bridgeSource,
+    canUseBridge,
+    isBridgeReady,
+    pendingPrompt,
+    platformMessageOrigin,
+    sendMode,
+  ]);
 
   return (
     <main className="sidepanel-shell">
-      <section className="compact-control-panel">
+      <section className={`compact-control-panel ${activePlatform.type === "messaging" ? "has-auto-send" : ""}`}>
         <img className="sidepanel-logo" src={appLogoPath} alt="AI Buddy" />
+        {activePlatform.type === "messaging" && (
+          <label className="auto-send-switch">
+            <span>Allow auto-send</span>
+            <span className="switch-control">
+              <input
+                aria-label="Allow auto-send"
+                role="switch"
+                type="checkbox"
+                checked={allowAutoSend}
+                onChange={(event) => setAllowAutoSend(event.target.checked)}
+              />
+              <span aria-hidden="true" className="switch-track">
+                <span className="switch-thumb" />
+              </span>
+            </span>
+          </label>
+        )}
         <label className="compact-field">
           <span>Platform</span>
           <select
@@ -208,16 +232,6 @@ function SidePanelApp() {
             ))}
           </select>
         </label>
-        {activePlatform.type === "messaging" && (
-          <label className="lock-row">
-            <input
-              type="checkbox"
-              checked={autoSendLockEnabled}
-              onChange={(event) => setAutoSendLockEnabled(event.target.checked)}
-            />
-            Auto-Send Lock
-          </label>
-        )}
       </section>
 
       <section className="chat-frame-panel" data-platform-id={activePlatform.id}>

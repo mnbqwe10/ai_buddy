@@ -13,6 +13,7 @@ type BridgeResult = { ok: true; mode: "sent" | "drafted" } | { ok: false; error:
 const sendButtonWaitMs = 3_000;
 const sendButtonDiscoveryWaitMs = 250;
 const sendButtonPollMs = 50;
+const sendVerificationWaitMs = 500;
 
 function delay(ms: number) {
   return new Promise<void>((resolve) => {
@@ -25,8 +26,26 @@ function visible(element: Element) {
   return rect.width > 0 && rect.height > 0;
 }
 
+function isUsableComposer(element: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  if ("disabled" in element && element.disabled) {
+    return false;
+  }
+
+  if (element.classList.contains("input-field-input-fake")) {
+    return false;
+  }
+
+  if (element.getAttribute("aria-hidden") === "true" || element.getAttribute("data-disabled") === "true") {
+    return false;
+  }
+
+  return visible(element);
+}
+
 function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLInputElement | null {
   const selectors = [
+    ".input-message-container .input-message-input[contenteditable='true'][data-peer-id]",
+    ".input-message-container .input-message-input[contenteditable='true']:not(.input-field-input-fake)",
     "[role='textbox']",
     "[contenteditable='true']",
     "div[contenteditable='true']",
@@ -37,9 +56,9 @@ function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLI
   for (const selector of selectors) {
     const elements = Array.from(
       doc.querySelectorAll<HTMLElement | HTMLTextAreaElement | HTMLInputElement>(selector),
-    ).filter(visible);
+    ).filter(isUsableComposer);
     const element = elements.at(-1);
-    if (element && !("disabled" in element && element.disabled)) {
+    if (element) {
       return element;
     }
   }
@@ -105,6 +124,18 @@ function setComposerText(
   return false;
 }
 
+function getComposerText(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
+    return composer.value;
+  }
+
+  return composer.textContent ?? "";
+}
+
+function normalizeComposerText(text: string) {
+  return text.replace(/\u200B/g, "").trim();
+}
+
 function controlIsEnabled(element: HTMLElement) {
   return (
     !("disabled" in element && element.disabled) &&
@@ -113,7 +144,20 @@ function controlIsEnabled(element: HTMLElement) {
   );
 }
 
-function findSendControlCandidates(doc = document): HTMLElement[] {
+function rejectionReasonForSendControl(element: HTMLElement) {
+  const label = `${element.getAttribute("aria-label") ?? ""} ${element.getAttribute("title") ?? ""} ${
+    element.textContent ?? ""
+  }`.toLowerCase();
+  const classList = Array.from(element.classList).map((className) => className.toLowerCase());
+
+  if (classList.includes("record") || label.includes("record") || label.includes("voice")) {
+    return "record-control";
+  }
+
+  return undefined;
+}
+
+function rawSendControlCandidates(doc = document): HTMLElement[] {
   const selectors = [
     "button[aria-label*='send' i]",
     "button[title*='send' i]",
@@ -139,24 +183,22 @@ function findSendControlCandidates(doc = document): HTMLElement[] {
   return Array.from(candidates);
 }
 
-function findSendControl(doc = document): HTMLElement | null {
-  return findSendControlCandidates(doc).find((element) => controlIsEnabled(element) && visible(element)) ?? null;
-}
-
 async function waitForSendButton(doc = document) {
   const deadline = Date.now() + sendButtonWaitMs;
   const discoveryDeadline = Date.now() + sendButtonDiscoveryWaitMs;
   let sawCandidate = false;
 
   while (Date.now() <= deadline) {
-    const candidates = findSendControlCandidates(doc);
+    const rawCandidates = rawSendControlCandidates(doc);
+    const rejectedCandidates = rawCandidates.filter((candidate) => rejectionReasonForSendControl(candidate));
+    const candidates = rawCandidates.filter((candidate) => !rejectionReasonForSendControl(candidate));
     sawCandidate = sawCandidate || candidates.length > 0;
     const control = candidates.find((candidate) => controlIsEnabled(candidate) && visible(candidate)) ?? null;
     if (control) {
       return { control, sawCandidate };
     }
 
-    if (!sawCandidate && Date.now() > discoveryDeadline) {
+    if (!sawCandidate && rejectedCandidates.length === 0 && Date.now() > discoveryDeadline) {
       return { control: null, sawCandidate };
     }
 
@@ -167,6 +209,7 @@ async function waitForSendButton(doc = document) {
 }
 
 function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  composer.focus();
   for (const type of ["keydown", "keypress", "keyup"]) {
     composer.dispatchEvent(
       new KeyboardEvent(type, {
@@ -182,6 +225,29 @@ function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputEl
   }
 }
 
+async function waitForPromptToLeaveComposer(
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+) {
+  const deadline = Date.now() + sendVerificationWaitMs;
+  const expectedText = normalizeComposerText(promptText);
+
+  while (Date.now() <= deadline) {
+    if (!composer.isConnected) {
+      return true;
+    }
+
+    const currentText = normalizeComposerText(getComposerText(composer));
+    if (!currentText.includes(expectedText)) {
+      return true;
+    }
+
+    await delay(sendButtonPollMs);
+  }
+
+  return false;
+}
+
 function activateControl(control: HTMLElement) {
   for (const type of ["pointerdown", "mousedown", "pointerup", "mouseup", "click"]) {
     control.dispatchEvent(
@@ -195,11 +261,31 @@ function activateControl(control: HTMLElement) {
   }
 }
 
-async function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+async function submitComposer(
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+) {
   const { control, sawCandidate } = await waitForSendButton();
   if (control) {
     activateControl(control);
-    return true;
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+
+    if (typeof control.click === "function") {
+      control.click();
+      if (await waitForPromptToLeaveComposer(composer, promptText)) {
+        return true;
+      }
+    }
+
+    dispatchEnter(composer);
+
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+
+    return false;
   }
 
   if (sawCandidate) {
@@ -220,8 +306,8 @@ export async function injectPrompt(promptText: string, submit: boolean): Promise
     return { ok: false, error: "Unable to draft message" };
   }
 
-  if (submit && !(await submitComposer(composer))) {
-    return { ok: false, error: "Message drafted, but the send button was not ready." };
+  if (submit && !(await submitComposer(composer, promptText))) {
+    return { ok: false, error: "Message drafted, but the chat platform did not accept the send action." };
   }
 
   return { ok: true, mode: submit ? "sent" : "drafted" };

@@ -72,9 +72,9 @@ _Avoid_: Direct platform
 A **Chat Platform** where the active recipient or conversation can vary, such as WhatsApp, Telegram, or Discord.
 _Avoid_: Social platform
 
-**Auto-Send Lock**:
-A side panel toggle that allows a **Messaging Platform** to auto-submit prompts after the user has opened the intended bot dialog.
-_Avoid_: Target Lock, default chat, selected chat
+**Allow Auto-Send**:
+A side panel switch that allows a **Messaging Platform** to auto-submit prompts after the user has opened the intended bot dialog. On means auto-send is allowed; off means prompts are drafted only.
+_Avoid_: Auto-Send Lock, Target Lock, default chat, selected chat
 
 **Review Before Sending**:
 A user preference that drafts prompts on **AI Chat Platforms** instead of auto-submitting them.
@@ -167,10 +167,10 @@ _Avoid_: Power user
 - Microsoft 365 Copilot appears lower in the default **Chat Platform** order.
 - v1 **Messaging Platforms** include WhatsApp Web, Telegram Web, and Discord.
 - The default **Chat Platform** order is ChatGPT, Claude, Gemini, DeepSeek, WhatsApp Web, Telegram Web, Discord, then Microsoft 365 Copilot.
-- A **Messaging Platform** requires **Auto-Send Lock** before any **Action** may auto-submit.
-- **Auto-Send Lock** is off by default.
-- **Auto-Send Lock** lasts only for the current side panel session.
-- When **Auto-Send Lock** is off, a **Messaging Platform** may draft a prompt but must not send it.
+- A **Messaging Platform** requires **Allow Auto-Send** before any **Action** may auto-submit.
+- **Allow Auto-Send** is off by default.
+- **Allow Auto-Send** lasts only for the current side panel session.
+- When **Allow Auto-Send** is off, a **Messaging Platform** may draft a prompt but must not send it.
 - **Review Before Sending** can make **AI Chat Platforms** draft prompts instead of auto-submitting them.
 - **Include Page URL** is off by default.
 - **Response Language** is a user setting for normal **Prompt Actions**.
@@ -190,7 +190,7 @@ _Avoid_: Power user
 - Failed prompt deliveries show an error but do not persist failed prompts or offer prompt history recovery.
 - The **Popup** stays minimal and does not manage **Scenarios** or **Actions** in depth.
 - The **Options Page** manages **Scenarios**, **Actions**, defaults, and detailed settings.
-- The side panel shows compact working controls for active **Chat Platform**, active **Scenario**, status, and **Auto-Send Lock** when relevant.
+- The side panel shows compact working controls for active **Chat Platform**, active **Scenario**, status, and **Allow Auto-Send** when relevant.
 - User settings include the active **Scenario**, active **Chat Platform**, **Review Before Sending**, **Include Page URL**, **Response Language**, toolbar enablement, and blocked sites.
 - The toolbar appears automatically after text selection unless disabled globally or blocked for the current site.
 - The **Popup** provides quick toolbar on/off control.
@@ -210,7 +210,7 @@ _Avoid_: Power user
 - Direct image or design-file editing.
 - Team sync or cloud accounts.
 - Prompt marketplace.
-- Persistent **Auto-Send Lock** for **Messaging Platforms**.
+- Persistent **Allow Auto-Send** for **Messaging Platforms**.
 
 ## Example dialogue
 
@@ -248,12 +248,12 @@ _Avoid_: Power user
 > **Domain expert:** "No. In v1 it is a **Prompt Action** that asks the active **Chat Platform** to use search if available."
 >
 > **Dev:** "Can WhatsApp auto-send a selected text prompt immediately?"
-> **Domain expert:** "Only after the user opens the intended bot dialog in the side panel and turns on **Auto-Send Lock**. Otherwise the extension must require confirmation."
+> **Domain expert:** "Only after the user opens the intended bot dialog in the side panel and switches on **Allow Auto-Send**. Otherwise the extension must require confirmation."
 >
-> **Dev:** "Should **Auto-Send Lock** persist tomorrow?"
-> **Domain expert:** "No. **Auto-Send Lock** is session-only and resets when the side panel reloads, the platform changes, or the extension restarts."
+> **Dev:** "Should **Allow Auto-Send** persist tomorrow?"
+> **Domain expert:** "No. **Allow Auto-Send** is session-only and resets when the side panel reloads, the platform changes, or the extension restarts."
 >
-> **Dev:** "What happens when a user clicks Polish while WhatsApp is open and **Auto-Send Lock** is off?"
+> **Dev:** "What happens when a user clicks Polish while WhatsApp is open and **Allow Auto-Send** is off?"
 > **Domain expert:** "The extension may draft the prompt in the current dialog, but it must not send the message."
 >
 > **Dev:** "Can cautious users review prompts before sending to ChatGPT?"
@@ -296,7 +296,7 @@ _Avoid_: Power user
 > **Domain expert:** "No. **First-Run Onboarding** is lightweight and lets users start from defaults quickly."
 >
 > **Dev:** "Does the side panel edit **Scenarios**?"
-> **Domain expert:** "No. It shows working controls like **Chat Platform**, active **Scenario**, status, and **Auto-Send Lock**."
+> **Domain expert:** "No. It shows working controls like **Chat Platform**, active **Scenario**, status, and **Allow Auto-Send**."
 >
 > **Dev:** "Should custom prompts expose complex variables first?"
 > **Domain expert:** "No. The extension is mainly for **Non-Technical Users** who want predefined prompt workflows and less copying or typing."

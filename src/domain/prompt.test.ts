@@ -139,7 +139,7 @@ describe("send policy", () => {
     expect(resolveSendMode({ platform: chatgpt })).toBe("autoSubmit");
   });
 
-  it("drafts on Messaging Platforms unless Auto-Send Lock is enabled", () => {
+  it("drafts on Messaging Platforms unless Allow Auto-Send is enabled", () => {
     const state = createDefaultAppState();
     const whatsapp = state.platforms.find((platform) => platform.id === "whatsapp")!;
 
@@ -147,7 +147,7 @@ describe("send policy", () => {
     expect(
       resolveSendMode({
         platform: whatsapp,
-        autoSendLockEnabled: true,
+        allowAutoSend: true,
       }),
     ).toBe("autoSubmit");
   });

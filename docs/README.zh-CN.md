@@ -42,7 +42,7 @@ AI Buddy 是一个 Chrome 扩展，会在网页选中文本后显示快捷工具
 4. 打开普通网页，选中文字，然后点击 **Explain** 或 **Translate** 等动作按钮。
 5. AI Buddy 会打开侧边栏，生成提示词，并在 AI 聊天平台中自动发送。
 
-WhatsApp、Telegram 和 Discord 等消息平台默认只会草拟提示词；只有在侧边栏中启用 **Auto-Send Lock** 后才会自动发送。
+WhatsApp、Telegram 和 Discord 等消息平台默认只会草拟提示词；只有在侧边栏中打开 **Allow auto-send** 后才会自动发送。
 
 ## 自定义
 

@@ -4,15 +4,15 @@ export type SendMode = "autoSubmit" | "draftOnly";
 
 export interface SendPolicyInput {
   platform: ChatPlatform;
-  autoSendLockEnabled?: boolean;
+  allowAutoSend?: boolean;
 }
 
 export function resolveSendMode({
   platform,
-  autoSendLockEnabled = false,
+  allowAutoSend = false,
 }: SendPolicyInput): SendMode {
   if (platform.type === "messaging") {
-    return autoSendLockEnabled ? "autoSubmit" : "draftOnly";
+    return allowAutoSend ? "autoSubmit" : "draftOnly";
   }
 
   return "autoSubmit";

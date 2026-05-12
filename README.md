@@ -42,7 +42,7 @@ AI Buddy is a Chrome extension that adds a selection toolbar for sending selecte
 4. Open a normal webpage, select text, then click an action button such as **Explain** or **Translate**.
 5. AI Buddy opens the side panel, drafts the prompt, and auto-sends it for AI chat platforms.
 
-Messaging platforms such as WhatsApp, Telegram, and Discord draft prompts only unless **Auto-Send Lock** is enabled inside the side panel.
+Messaging platforms such as WhatsApp, Telegram, and Discord draft prompts only unless **Allow auto-send** is switched on inside the side panel.
 
 ## Customize
 
