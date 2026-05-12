@@ -14,6 +14,7 @@ const sendButtonWaitMs = 3_000;
 const sendButtonDiscoveryWaitMs = 250;
 const sendButtonPollMs = 50;
 const sendVerificationWaitMs = 500;
+const whatsappEditorSettleMs = 300;
 
 function delay(ms: number) {
   return new Promise<void>((resolve) => {
@@ -44,6 +45,8 @@ function isUsableComposer(element: HTMLElement | HTMLTextAreaElement | HTMLInput
 
 function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLInputElement | null {
   const selectors = [
+    "footer [role='textbox'][contenteditable='true']",
+    "footer [contenteditable='true'][data-tab]",
     ".input-message-container .input-message-input[contenteditable='true'][data-peer-id]",
     ".input-message-container .input-message-input[contenteditable='true']:not(.input-field-input-fake)",
     "[role='textbox']",
@@ -102,6 +105,28 @@ function composerIsSlateEditor(composer: HTMLElement) {
   return composer.getAttribute("data-slate-editor") === "true";
 }
 
+function composerIsWhatsAppComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  if (window.location.hostname === "web.whatsapp.com") {
+    return true;
+  }
+
+  if (!(composer instanceof HTMLElement)) {
+    return false;
+  }
+
+  const composerLabel = `${composer.getAttribute("aria-label") ?? ""} ${
+    composer.getAttribute("aria-placeholder") ?? ""
+  }`.toLowerCase();
+
+  return Boolean(
+    composer.closest("footer") &&
+      composer.matches("[contenteditable='true']") &&
+      (composer.getAttribute("role") === "textbox" ||
+        composer.hasAttribute("data-tab") ||
+        composerLabel.includes("message")),
+  );
+}
+
 function createClipboardData(text: string): DataTransfer {
   if (typeof DataTransfer === "function") {
     const clipboardData = new DataTransfer();
@@ -158,14 +183,49 @@ function createPasteEvent(text: string) {
 function pasteComposerText(composer: HTMLElement, promptText: string) {
   selectComposerContents(composer);
   const event = createPasteEvent(promptText);
-  const pasteWasNotPrevented = composer.dispatchEvent(event);
+  composer.dispatchEvent(event);
 
-  if (pasteWasNotPrevented && normalizeComposerText(composer.textContent ?? "") !== normalizeComposerText(promptText)) {
+  if (
+    normalizeComposerText(composer.textContent ?? "") !== normalizeComposerText(promptText) &&
+    typeof document.execCommand === "function"
+  ) {
+    selectComposerContents(composer);
     document.execCommand("insertText", false, promptText);
   }
 }
 
-function setComposerText(
+async function setWhatsAppComposerText(composer: HTMLElement, promptText: string) {
+  pasteComposerText(composer, promptText);
+  await delay(whatsappEditorSettleMs);
+
+  if (composerContainsPrompt(composer, promptText)) {
+    return true;
+  }
+
+  selectComposerContents(composer);
+  dispatchTextInputEvent(composer, "beforeinput", "insertFromPaste", promptText);
+  if (typeof document.execCommand === "function") {
+    document.execCommand("insertText", false, promptText);
+  }
+  dispatchTextInputEvent(composer, "input", "insertFromPaste", promptText);
+  await delay(whatsappEditorSettleMs);
+
+  if (composerContainsPrompt(composer, promptText)) {
+    return true;
+  }
+
+  selectComposerContents(composer);
+  dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
+  if (typeof document.execCommand === "function") {
+    document.execCommand("insertText", false, promptText);
+  }
+  dispatchTextInputEvent(composer, "input", "insertText", promptText);
+  await delay(whatsappEditorSettleMs);
+
+  return composerContainsPrompt(composer, promptText);
+}
+
+async function setComposerText(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
 ) {
@@ -179,6 +239,10 @@ function setComposerText(
   }
 
   if (composer.isContentEditable || composer.hasAttribute("contenteditable")) {
+    if (composerIsWhatsAppComposer(composer)) {
+      return setWhatsAppComposerText(composer, promptText);
+    }
+
     if (composerIsSlateEditor(composer)) {
       pasteComposerText(composer, promptText);
     } else {
@@ -215,6 +279,13 @@ function normalizeComposerText(text: string) {
   return text.replace(/\u200B/g, "").trim();
 }
 
+function composerContainsPrompt(
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+) {
+  return normalizeComposerText(getComposerText(composer)).includes(normalizeComposerText(promptText));
+}
+
 function controlIsEnabled(element: HTMLElement) {
   return (
     !("disabled" in element && element.disabled) &&
@@ -234,6 +305,10 @@ function rejectionReasonForSendControl(element: HTMLElement) {
   }
 
   if (label.includes("gift") || label.includes("nitro")) {
+    return "non-message-send-control";
+  }
+
+  if (label.includes("send files") || label.includes("attach")) {
     return "non-message-send-control";
   }
 
@@ -308,6 +383,52 @@ function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputEl
   }
 }
 
+function whatsappSendControl(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  const scopes: ParentNode[] = [];
+  if (composer instanceof HTMLElement) {
+    const footer = composer.closest("footer");
+    if (footer) {
+      scopes.push(footer);
+    }
+  }
+  scopes.push(document);
+  const selectors = [
+    "button[aria-label='Send']",
+    "[role='button'][aria-label='Send']",
+    "button[data-tab='11'][aria-label='Send']",
+    "button[data-testid*='send' i]",
+    "[role='button'][data-testid*='send' i]",
+    "button [data-icon='send']",
+    "[role='button'] [data-icon='send']",
+    "button [data-testid='wds-ic-send-filled']",
+    "[role='button'] [data-testid='wds-ic-send-filled']",
+    "button [data-icon='wds-ic-send-filled']",
+    "[role='button'] [data-icon='wds-ic-send-filled']",
+    "button [data-icon*='send' i]",
+    "[role='button'] [data-icon*='send' i]",
+  ];
+  const candidates: HTMLElement[] = [];
+
+  for (const scope of scopes) {
+    for (const selector of selectors) {
+      for (const element of scope.querySelectorAll<HTMLElement>(selector)) {
+        const control = element.closest<HTMLElement>("button,[role='button']") ?? element;
+        if (!candidates.includes(control)) {
+          candidates.push(control);
+        }
+      }
+    }
+  }
+
+  for (const control of candidates) {
+    if (!rejectionReasonForSendControl(control) && controlIsEnabled(control) && visible(control)) {
+      return control;
+    }
+  }
+
+  return null;
+}
+
 function clearStaleComposerDom(composer: HTMLElement, promptText: string) {
   if (normalizeComposerText(composer.textContent ?? "") !== normalizeComposerText(promptText)) {
     return;
@@ -364,6 +485,32 @@ async function submitComposer(
     return true;
   }
 
+  if (composerIsWhatsAppComposer(composer)) {
+    dispatchEnter(composer);
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+
+    const control = whatsappSendControl(composer);
+    if (!control) {
+      return false;
+    }
+
+    if (typeof control.click === "function") {
+      control.click();
+    }
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+
+    activateControl(control);
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+
+    return false;
+  }
+
   const { control, sawCandidate } = await waitForSendButton();
   if (control) {
     activateControl(control);
@@ -401,7 +548,7 @@ export async function injectPrompt(promptText: string, submit: boolean): Promise
     return { ok: false, error: "Messaging composer not found" };
   }
 
-  if (!setComposerText(composer, promptText)) {
+  if (!(await setComposerText(composer, promptText))) {
     return { ok: false, error: "Unable to draft message" };
   }
 

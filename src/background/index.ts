@@ -1,55 +1,27 @@
 import { ensureAppState } from "../shared/storage";
 import type { RuntimeMessage } from "../shared/messages";
 import { createPromptRouter } from "./promptRouter";
+import { platformFrameRules } from "./platformFrameRules";
 
 const promptRouter = createPromptRouter();
 
-const frameRuleUrls = [
-  "https://chatgpt.com/*",
-  "https://chat.openai.com/*",
-  "https://claude.ai/*",
-  "https://gemini.google.com/*",
-  "https://chat.deepseek.com/*",
-  "https://copilot.microsoft.com/*",
-  "https://web.whatsapp.com/*",
-  "https://web.telegram.org/*",
-  "https://discord.com/*",
-];
-
-function platformFrameRules(): chrome.declarativeNetRequest.Rule[] {
-  return frameRuleUrls.map((urlFilter, index) => ({
-    id: index + 1,
-    priority: 1,
-    action: {
-      type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
-      responseHeaders: [
-        {
-          header: "content-security-policy",
-          operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
-        },
-        {
-          header: "x-frame-options",
-          operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
-        },
-      ],
-    },
-    condition: {
-      urlFilter,
-      resourceTypes: [
-        chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
-        chrome.declarativeNetRequest.ResourceType.SUB_FRAME,
-      ],
-    },
-  }));
+function installPlatformFrameRules() {
+  const rules = platformFrameRules();
+  void chrome.declarativeNetRequest
+    .updateDynamicRules({
+      addRules: rules,
+      removeRuleIds: rules.map((rule) => rule.id),
+    })
+    .catch((error) => {
+      console.warn("[AI Buddy] Unable to install platform frame rules", error);
+    });
 }
+
+installPlatformFrameRules();
 
 chrome.runtime.onInstalled.addListener(() => {
   ensureAppState();
-  const rules = platformFrameRules();
-  chrome.declarativeNetRequest.updateDynamicRules({
-    addRules: rules,
-    removeRuleIds: rules.map((rule) => rule.id),
-  });
+  installPlatformFrameRules();
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });
 

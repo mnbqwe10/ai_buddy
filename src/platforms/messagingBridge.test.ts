@@ -28,9 +28,45 @@ function createDiscordSlateComposer() {
   return composer;
 }
 
+function mockExecCommandInsertText(target: HTMLElement) {
+  Object.defineProperty(document, "execCommand", {
+    configurable: true,
+    value: vi.fn((command: string, _showUi?: boolean, value?: string) => {
+      if (command !== "insertText") {
+        return false;
+      }
+
+      target.textContent = value ?? "";
+      target.dispatchEvent(
+        new InputEvent("input", {
+          bubbles: true,
+          inputType: "insertText",
+          data: value ?? "",
+        }),
+      );
+      return true;
+    }),
+  });
+}
+
+function createWhatsAppComposer() {
+  const footer = document.createElement("footer");
+  const composer = document.createElement("div");
+  composer.setAttribute("role", "textbox");
+  composer.setAttribute("contenteditable", "true");
+  composer.setAttribute("data-tab", "10");
+  composer.setAttribute("aria-label", "Type a message");
+  markVisible(composer);
+  footer.append(composer);
+  document.body.append(footer);
+  mockExecCommandInsertText(composer);
+  return { footer, composer };
+}
+
 describe("messaging bridge", () => {
   afterEach(() => {
     document.body.innerHTML = "";
+    Reflect.deleteProperty(document, "execCommand");
     vi.restoreAllMocks();
   });
 
@@ -242,6 +278,108 @@ describe("messaging bridge", () => {
     expect(result).toEqual({ ok: true, mode: "sent" });
     expect(enterSend).toHaveBeenCalledTimes(1);
     expect(composer.textContent).toBe("");
+  });
+
+  it("uses WhatsApp's footer composer instead of other visible textboxes", async () => {
+    const searchBox = document.createElement("div");
+    searchBox.setAttribute("role", "textbox");
+    searchBox.setAttribute("contenteditable", "true");
+    searchBox.setAttribute("aria-label", "Search input textbox");
+    markVisible(searchBox);
+
+    const { composer } = createWhatsAppComposer();
+    composer.addEventListener("keydown", (event) => {
+      if ((event as KeyboardEvent).key === "Enter") {
+        composer.textContent = "";
+      }
+    });
+
+    document.body.prepend(searchBox);
+
+    const result = await injectPrompt("Send this to WhatsApp", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(searchBox.textContent).toBe("");
+    expect(composer.textContent).toBe("");
+  });
+
+  it("does not click WhatsApp's send-files control when falling back to a button", async () => {
+    const { footer, composer } = createWhatsAppComposer();
+
+    const sendFilesButton = document.createElement("button");
+    sendFilesButton.setAttribute("aria-label", "Send files");
+    markVisible(sendFilesButton);
+
+    const sendButton = document.createElement("button");
+    sendButton.setAttribute("aria-label", "Send");
+    markVisible(sendButton);
+
+    const clickSendFiles = vi.fn();
+    const clickSend = vi.fn(() => {
+      composer.textContent = "";
+    });
+    sendFilesButton.addEventListener("click", clickSendFiles);
+    sendButton.addEventListener("click", clickSend);
+    footer.append(sendFilesButton, sendButton);
+
+    const result = await injectPrompt("Fallback to WhatsApp send button", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(clickSendFiles).not.toHaveBeenCalled();
+    expect(clickSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("finds WhatsApp's current send icon outside the exact footer subtree", async () => {
+    const { composer } = createWhatsAppComposer();
+
+    const wrapper = document.createElement("div");
+    const sendButton = document.createElement("button");
+    sendButton.setAttribute("data-tab", "11");
+    sendButton.setAttribute("aria-label", "Send");
+    const icon = document.createElement("span");
+    icon.setAttribute("data-testid", "wds-ic-send-filled");
+    icon.setAttribute("data-icon", "wds-ic-send-filled");
+    markVisible(sendButton);
+    markVisible(icon);
+    sendButton.append(icon);
+    wrapper.append(sendButton);
+    document.body.append(wrapper);
+
+    const clickSend = vi.fn(() => {
+      composer.textContent = "";
+    });
+    sendButton.addEventListener("click", clickSend);
+
+    const result = await injectPrompt("Use WhatsApp wds send icon", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(clickSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends WhatsApp prompts with Enter before clicking any send control", async () => {
+    const { footer, composer } = createWhatsAppComposer();
+
+    const sendButton = document.createElement("button");
+    sendButton.setAttribute("aria-label", "Send");
+    markVisible(sendButton);
+
+    const clickSend = vi.fn();
+    const enterSend = vi.fn(() => {
+      composer.textContent = "";
+    });
+    sendButton.addEventListener("click", clickSend);
+    composer.addEventListener("keydown", (event) => {
+      if ((event as KeyboardEvent).key === "Enter") {
+        enterSend();
+      }
+    });
+    footer.append(sendButton);
+
+    const result = await injectPrompt("Enter sends WhatsApp", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(enterSend).toHaveBeenCalledTimes(1);
+    expect(clickSend).not.toHaveBeenCalled();
   });
 
   it("dispatches a Discord-compatible Enter sequence when no send button exists", async () => {
