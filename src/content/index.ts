@@ -9,6 +9,7 @@ import {
   createContentScriptErrorHandler,
   handleExtensionContextUnhandledRejection,
 } from "./extensionContext";
+import { createInputPromptForm, focusInputPromptForm, setInputPromptFormVisible } from "./inputPromptForm";
 import { shouldPreventToolbarMouseDown, targetIsNativeToolbarControl } from "./toolbarEvents";
 
 const rootId = "ai-buddy-toolbar-root";
@@ -23,6 +24,7 @@ let selectionUpdateTimer: number | null = null;
 let isPointerSelecting = false;
 let isToolbarInteracting = false;
 let extensionContextIsInvalidated = false;
+let activeInputPromptAction: Action | null = null;
 
 function removeExistingToolbarDom() {
   document.getElementById(rootId)?.remove();
@@ -61,6 +63,7 @@ function injectStyles() {
 
     #${rootId}[data-visible="true"] {
       display: flex;
+      flex-direction: column;
     }
 
     #${rootId} .ai-buddy-inner {
@@ -69,6 +72,7 @@ function injectStyles() {
       gap: 6px;
       max-width: 100%;
       padding: 7px;
+      overflow-x: auto;
     }
 
     #${rootId} select,
@@ -164,8 +168,46 @@ function injectStyles() {
       width: 100%;
       text-align: left;
     }
+
+    #${rootId} .ai-buddy-input-panel {
+      display: flex;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 7px 7px;
+    }
+
+    #${rootId} .ai-buddy-input-panel[hidden] {
+      display: none;
+    }
+
+    #${rootId} .ai-buddy-input {
+      width: 100%;
+      min-width: min(320px, calc(100vw - 48px));
+      min-height: 34px;
+      box-sizing: border-box;
+      border: 1px solid #d8deea;
+      border-radius: 7px;
+      padding: 0 10px;
+      outline: none;
+      background: #f8fafc;
+      color: #172033;
+      font: inherit;
+    }
+
+    #${rootId} .ai-buddy-input:focus {
+      border-color: var(--ai-buddy-scenario-color, #2563eb);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai-buddy-scenario-color, #2563eb) 18%, transparent);
+    }
   `;
   document.documentElement.appendChild(style);
+}
+
+function maintainToolbarInteraction(durationMs: number) {
+  isToolbarInteracting = true;
+  window.setTimeout(() => {
+    isToolbarInteracting = false;
+  }, durationMs);
 }
 
 function ensureToolbarRoot() {
@@ -178,10 +220,7 @@ function ensureToolbarRoot() {
   toolbarRoot.id = rootId;
   toolbarRoot.dataset.visible = "false";
   toolbarRoot.addEventListener("mousedown", (event) => {
-    isToolbarInteracting = true;
-    window.setTimeout(() => {
-      isToolbarInteracting = false;
-    }, targetIsNativeToolbarControl(event.target) ? 800 : 120);
+    maintainToolbarInteraction(targetIsNativeToolbarControl(event.target) ? 800 : 120);
 
     if (shouldPreventToolbarMouseDown(event.target)) {
       event.preventDefault();
@@ -224,7 +263,9 @@ function positionToolbar(root: HTMLDivElement, rect: DOMRect) {
 function hideToolbar() {
   if (toolbarRoot) {
     toolbarRoot.dataset.visible = "false";
+    toolbarRoot.dataset.inputMode = "false";
   }
+  activeInputPromptAction = null;
 }
 
 function destroyToolbar() {
@@ -297,14 +338,59 @@ async function copySelection() {
   hideToolbar();
 }
 
-function handleAction(action: Action) {
-  if (extensionContextIsInvalidated) {
-    hideToolbar();
+function hideInputPrompt(options: { clear?: boolean } = {}) {
+  if (!toolbarRoot) {
     return;
   }
 
-  if (action.id === "copy") {
-    void copySelection().catch(handleContentScriptError);
+  const form = toolbarRoot.querySelector<HTMLFormElement>(".ai-buddy-input-panel");
+  if (form) {
+    setInputPromptFormVisible(form, false, options);
+  }
+  toolbarRoot.dataset.inputMode = "false";
+  activeInputPromptAction = null;
+
+  if (lastSelectionRect) {
+    positionToolbar(toolbarRoot, lastSelectionRect);
+  }
+}
+
+function showInputPrompt(action: Action) {
+  if (!toolbarRoot || !lastSelectionText) {
+    return;
+  }
+
+  const form = toolbarRoot.querySelector<HTMLFormElement>(".ai-buddy-input-panel");
+  if (!form) {
+    return;
+  }
+
+  activeInputPromptAction = action;
+  toolbarRoot.dataset.inputMode = "true";
+  setInputPromptFormVisible(form, true, { clear: true });
+
+  if (lastSelectionRect) {
+    positionToolbar(toolbarRoot, lastSelectionRect);
+  }
+
+  maintainToolbarInteraction(800);
+  window.setTimeout(() => {
+    focusInputPromptForm(form);
+  }, 0);
+}
+
+function submitInputPrompt(userInput: string) {
+  const action = activeInputPromptAction;
+  if (!action) {
+    return;
+  }
+
+  sendPromptAction(action, userInput);
+}
+
+function sendPromptAction(action: Action, userInput?: string) {
+  if (extensionContextIsInvalidated) {
+    hideToolbar();
     return;
   }
 
@@ -320,15 +406,6 @@ function handleAction(action: Action) {
       hideToolbar();
       return;
     }
-  }
-
-  const userInput =
-    action.type === "inputPrompt"
-      ? window.prompt("Ask about this selection") ?? undefined
-      : undefined;
-
-  if (action.type === "inputPrompt" && !userInput) {
-    return;
   }
 
   const rendered = renderPrompt(
@@ -356,6 +433,25 @@ function handleAction(action: Action) {
     return;
   }
   hideToolbar();
+}
+
+function handleAction(action: Action) {
+  if (extensionContextIsInvalidated) {
+    hideToolbar();
+    return;
+  }
+
+  if (action.id === "copy") {
+    void copySelection().catch(handleContentScriptError);
+    return;
+  }
+
+  if (action.type === "inputPrompt") {
+    showInputPrompt(action);
+    return;
+  }
+
+  sendPromptAction(action);
 }
 
 function actionButton(action: Action, buttonStyle: AppState["settings"]["actionButtonStyle"]) {
@@ -439,8 +535,14 @@ function renderToolbar() {
     inner.appendChild(more);
   }
 
-  root.appendChild(inner);
+  const inputPromptForm = createInputPromptForm({
+    onSubmit: submitInputPrompt,
+    onCancel: () => hideInputPrompt({ clear: true }),
+  });
+
+  root.append(inner, inputPromptForm);
   root.dataset.visible = "true";
+  root.dataset.inputMode = "false";
   positionToolbar(root, lastSelectionRect);
 }
 
@@ -506,15 +608,15 @@ document.addEventListener("touchend", () => {
 });
 
 document.addEventListener("selectionchange", () => {
-  if (isPointerSelecting || isToolbarInteracting) {
+  if (isPointerSelecting || isToolbarInteracting || eventTargetIsToolbar(document.activeElement)) {
     return;
   }
 
   scheduleToolbarForCurrentSelection(80);
 });
 
-document.addEventListener("keyup", () => {
-  if (isPointerSelecting || isToolbarInteracting) {
+document.addEventListener("keyup", (event) => {
+  if (isPointerSelecting || isToolbarInteracting || eventTargetIsToolbar(event.target)) {
     return;
   }
 
