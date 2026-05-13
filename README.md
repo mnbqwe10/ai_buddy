@@ -1,4 +1,6 @@
-# AI Buddy
+<p align="center">
+  <img src="assets/banner_light.png" width="400">
+</p>
 
 Tired of copying page text, switching tabs, and pasting the same context into your AI bot? AI Buddy lets you select text on any page, choose an action, and send a ready-made prompt to your preferred chat platform from Chrome's side panel.
 
