@@ -1,181 +1,449 @@
----
-layout: null
-title: AI Buddy
-description: Chrome selection toolbar for AI chat workflows
----
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Buddy - Chrome selection toolbar for AI chat</title>
+    <title>AI Buddy - Chrome extension for AI workflows</title>
     <meta
       name="description"
-      content="AI Buddy is a Chrome extension that turns selected page text into reusable prompts and sends them to your preferred chat platform from the side panel."
+      content="AI Buddy is a Chrome extension that turns selected page text into reusable prompts and sends them to your preferred AI chat platform from Chrome's side panel."
     >
+    <meta property="og:title" content="AI Buddy - Chrome extension">
+    <meta
+      property="og:description"
+      content="Select text, choose an AI action, and continue the conversation in Chrome's side panel."
+    >
+    <meta property="og:image" content="https://mnbqwe10.github.io/ai_buddy/banner_dark.png">
+    <meta property="og:url" content="https://mnbqwe10.github.io/ai_buddy/">
+    <link rel="icon" href="logo.png">
     <link rel="stylesheet" href="landing.css">
   </head>
   <body>
     <header class="site-header" aria-label="Main navigation">
       <a class="brand" href="#top" aria-label="AI Buddy home">
-        <span class="brand-mark" aria-hidden="true">AI</span>
+        <img src="logo.png" alt="" aria-hidden="true">
         <span>AI Buddy</span>
       </a>
       <nav class="nav-links" aria-label="Primary">
         <a href="#features">Features</a>
-        <a href="#gallery">Gallery</a>
+        <a href="#demo">Demo</a>
         <a href="#install">Install</a>
+        <a href="#privacy">Privacy</a>
         <a href="https://github.com/mnbqwe10/ai_buddy/blob/main/docs/README.zh-CN.md">中文</a>
       </nav>
-      <a class="header-action" href="https://github.com/mnbqwe10/ai_buddy">GitHub</a>
+      <div class="header-actions" aria-label="Project links">
+        <a
+          class="header-action"
+          href="https://chromewebstore.google.com/detail/eigpaeoigklelmfgnkljhbjjbpohenpn?utm_source=item-share-cb"
+        >
+          Add to Chrome
+        </a>
+        <a class="icon-link" href="https://github.com/mnbqwe10/ai_buddy" aria-label="AI Buddy on GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.86 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.9c-2.78.62-3.37-1.21-3.37-1.21-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.3 9.3 0 0 1 12 6.97c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.56 5.06.36.32.68.94.68 1.9v2.81c0 .27.18.59.69.49A10.12 10.12 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path>
+          </svg>
+        </a>
+      </div>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-brand">
+          <img src="banner_dark.png" alt="AI Buddy Chrome Extension">
+        </div>
         <div class="hero-copy">
-          <p class="eyebrow">Chrome extension for fast AI workflows</p>
-          <h1 id="hero-title">AI Buddy</h1>
+          <p class="eyebrow">Free Chrome sidebar assistant</p>
+          <h1 id="hero-title">Your AI chat workflow, right beside the page.</h1>
           <p class="hero-lede">
-            Select text on any page, choose a reusable action, and send a ready-made prompt
-            to your preferred AI chat platform in Chrome's side panel.
+            Highlight text on any website, choose a reusable action, and send a polished
+            prompt to your preferred AI chat platform without losing the page context.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
-            <a class="button button-primary" href="#install">Install locally</a>
-            <a class="button button-secondary" href="https://github.com/mnbqwe10/ai_buddy">View source</a>
+            <a
+              class="button button-primary"
+              href="https://chromewebstore.google.com/detail/eigpaeoigklelmfgnkljhbjjbpohenpn?utm_source=item-share-cb"
+            >
+              Add to Chrome
+            </a>
+            <a class="icon-link hero-github" href="https://github.com/mnbqwe10/ai_buddy" aria-label="AI Buddy on GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.86 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.9c-2.78.62-3.37-1.21-3.37-1.21-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.3 9.3 0 0 1 12 6.97c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.56 5.06.36.32.68.94.68 1.9v2.81c0 .27.18.59.69.49A10.12 10.12 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path>
+              </svg>
+            </a>
+            <a class="button button-secondary" href="#demo">See AI Buddy in action</a>
           </div>
-          <dl class="hero-stats" aria-label="Project highlights">
-            <div>
-              <dt>7+</dt>
-              <dd>built-in actions</dd>
-            </div>
-            <div>
-              <dt>3</dt>
-              <dd>starter scenarios</dd>
-            </div>
-            <div>
-              <dt>MV3</dt>
-              <dd>Chrome extension</dd>
-            </div>
-          </dl>
+          <div class="trust-row" aria-label="Project highlights">
+            <span>Free to use</span>
+            <span>No AI Buddy backend</span>
+            <span>No chat message storage</span>
+          </div>
         </div>
-        <div class="hero-media" aria-label="AI Buddy demo">
-          <img src="demo.gif" alt="AI Buddy selecting text on a webpage and sending a prompt from the toolbar">
+        <div class="hero-preview" aria-label="AI Buddy product preview">
+          <div class="browser-frame">
+            <div class="browser-top">
+              <span></span>
+              <span></span>
+              <span></span>
+              <strong>any-website.com/article</strong>
+            </div>
+            <div class="browser-body">
+              <div class="scenario-previews" aria-label="AI Buddy scenario toolbar examples">
+                <article class="scenario-card scenario-learning">
+                  <p class="mock-kicker">Learning</p>
+                  <h2>Understand any selected passage</h2>
+                  <p class="selected-copy">
+                    Hand-eye calibration estimates the rigid transformation between a robot end-effector
+                    and an attached camera.
+                  </p>
+                  <div class="real-toolbar" style="--scenario-color: #2563eb;" aria-label="Learning scenario toolbar">
+                    <div class="real-toolbar-inner">
+                      <select aria-label="Active Scenario">
+                        <option selected>Learning</option>
+                        <option>Workplace</option>
+                        <option>Creative</option>
+                      </select>
+                      <button class="real-action" style="--action-color: #475569;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h10v12H8z"></path><path d="M6 16H4V4h10v2"></path></svg>
+                        </span>
+                        <span>Copy</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #2563eb;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.7 2.7 0 0 1 5 1.4c0 1.9-2.5 2.2-2.5 4"></path><path d="M12 18h.01"></path></svg>
+                        </span>
+                        <span>Explain</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #0891b2;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9"></path><path d="M8 3v2"></path><path d="M5 12c2.7-1.3 4.4-3.7 5-7"></path><path d="M11 12c-1.2-.8-2.3-2-3-3.5"></path><path d="M13 21l5-11 5 11"></path><path d="M15 17h6"></path></svg>
+                        </span>
+                        <span>Translate</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #7c3aed;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12"></path><path d="M8 12h12"></path><path d="M8 18h8"></path><path d="M4 6h.01"></path><path d="M4 12h.01"></path><path d="M4 18h.01"></path></svg>
+                        </span>
+                        <span>Summarize</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #ea580c;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v9H8l-3 3z"></path><path d="M9 10h6"></path><path d="M9 13h4"></path></svg>
+                        </span>
+                        <span>Ask</span>
+                      </button>
+                    </div>
+                    <form class="real-input-panel" hidden>
+                      <input class="real-input" aria-label="Ask a custom question">
+                    </form>
+                  </div>
+                </article>
+
+                <article class="scenario-card scenario-workplace">
+                  <p class="mock-kicker">Email reply</p>
+                  <h2>Draft a careful response from context</h2>
+                  <p class="selected-copy">
+                    Can you send the updated contract by Friday and confirm whether procurement approved it?
+                  </p>
+                  <div class="real-toolbar" style="--scenario-color: #059669;" aria-label="Workplace scenario toolbar">
+                    <div class="real-toolbar-inner">
+                      <select aria-label="Active Scenario">
+                        <option>Learning</option>
+                        <option selected>Workplace</option>
+                        <option>Creative</option>
+                      </select>
+                      <button class="real-action" style="--action-color: #475569;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h10v12H8z"></path><path d="M6 16H4V4h10v2"></path></svg>
+                        </span>
+                        <span>Copy</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #059669;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 8 5 13l5 5"></path><path d="M5 13h8a6 6 0 0 1 6 6v1"></path></svg>
+                        </span>
+                        <span>Draft Reply</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #16a34a;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg>
+                        </span>
+                        <span>Polish</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #7c3aed;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12"></path><path d="M8 12h12"></path><path d="M8 18h8"></path><path d="M4 6h.01"></path><path d="M4 12h.01"></path><path d="M4 18h.01"></path></svg>
+                        </span>
+                        <span>Summarize</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #0891b2;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9"></path><path d="M8 3v2"></path><path d="M5 12c2.7-1.3 4.4-3.7 5-7"></path><path d="M11 12c-1.2-.8-2.3-2-3-3.5"></path><path d="M13 21l5-11 5 11"></path><path d="M15 17h6"></path></svg>
+                        </span>
+                        <span>Translate</span>
+                      </button>
+                      <div class="real-more">
+                        <button type="button">More</button>
+                        <div class="real-menu">
+                          <button class="real-action" style="--action-color: #ea580c;">
+                            <span class="real-action-icon">
+                              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v9H8l-3 3z"></path><path d="M9 10h6"></path><path d="M9 13h4"></path></svg>
+                            </span>
+                            <span>Ask</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <form class="real-input-panel" hidden>
+                      <input class="real-input" aria-label="Ask a custom question">
+                    </form>
+                  </div>
+                </article>
+
+                <article class="scenario-card scenario-creative">
+                  <p class="mock-kicker">Creating visuals</p>
+                  <h2>Turn rough notes into visual direction</h2>
+                  <p class="selected-copy">
+                    A lightweight launch dashboard showing adoption, retention, customer feedback, and next bets.
+                  </p>
+                  <div class="real-toolbar" style="--scenario-color: #db2777;" aria-label="Creative scenario toolbar">
+                    <div class="real-toolbar-inner">
+                      <select aria-label="Active Scenario">
+                        <option>Learning</option>
+                        <option>Workplace</option>
+                        <option selected>Creative</option>
+                      </select>
+                      <button class="real-action" style="--action-color: #db2777;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M8 14a6 6 0 1 1 8 0c-1.2 1-1.5 2.1-1.5 3h-5c0-.9-.3-2-1.5-3z"></path></svg>
+                        </span>
+                        <span>Brainstorm</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #9333ea;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="7" height="7" rx="1"></rect><circle cx="17" cy="9" r="3"></circle><path d="m6 20 4-5 4 5 3-4 3 4z"></path></svg>
+                        </span>
+                        <span>Visualize</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #be123c;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9l7 7-7 7H4z"></path><path d="M8 12h.01"></path></svg>
+                        </span>
+                        <span>Name Ideas</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #a21caf;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 18 6"></path><path d="m14 6 4-2 2 4-2 2z"></path><path d="M5 5h.01"></path><path d="M12 3h.01"></path><path d="M20 14h.01"></path></svg>
+                        </span>
+                        <span>Make Prompt</span>
+                      </button>
+                      <button class="real-action" style="--action-color: #ea580c;">
+                        <span class="real-action-icon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14v9H8l-3 3z"></path><path d="M9 10h6"></path><path d="M9 13h4"></path></svg>
+                        </span>
+                        <span>Ask</span>
+                      </button>
+                    </div>
+                    <form class="real-input-panel" hidden>
+                      <input class="real-input" aria-label="Ask a custom question">
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="workflow" aria-label="Workflow">
-        <div class="workflow-step">
+      <section class="section platform-section" aria-labelledby="platform-title">
+        <div class="section-heading compact-heading">
+          <p class="eyebrow">Supported platforms</p>
+          <h2 id="platform-title">Use the AI and messaging tools you already trust.</h2>
+          <p>
+            AI Buddy supports ChatGPT, Claude, Gemini, DeepSeek, and Microsoft Copilot for AI chat.
+            Messaging destinations such as WhatsApp Web, Telegram Web, and Discord are handled as drafts
+            so you can review before sending.
+          </p>
+        </div>
+        <div class="platform-list" aria-label="Supported platform list">
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=chatgpt.com&amp;sz=64" alt="">ChatGPT</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=claude.ai&amp;sz=64" alt="">Claude</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=gemini.google.com&amp;sz=64" alt="">Gemini</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=chat.deepseek.com&amp;sz=64" alt="">DeepSeek</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&amp;sz=64" alt="">Microsoft Copilot</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=web.whatsapp.com&amp;sz=64" alt="">WhatsApp Web</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=web.telegram.org&amp;sz=64" alt="">Telegram Web</span>
+          <span><img class="platform-logo" src="https://www.google.com/s2/favicons?domain=discord.com&amp;sz=64" alt="">Discord</span>
+        </div>
+      </section>
+
+      <section class="feature-strip" aria-label="AI Buddy workflow">
+        <article>
           <span>01</span>
-          <strong>Select page text</strong>
-          <p>Use the web content already in front of you without copying it into another tab.</p>
-        </div>
-        <div class="workflow-step">
+          <h2>Select text</h2>
+          <p>Use the web content already in front of you.</p>
+        </article>
+        <article>
           <span>02</span>
-          <strong>Pick an action</strong>
-          <p>Explain, translate, summarize, draft, polish, brainstorm, or ask a custom question.</p>
-        </div>
-        <div class="workflow-step">
+          <h2>Pick an action</h2>
+          <p>Run reusable prompts from a compact toolbar.</p>
+        </article>
+        <article>
           <span>03</span>
-          <strong>Continue in side panel</strong>
-          <p>The target platform opens beside the page with the generated prompt ready to go.</p>
-        </div>
+          <h2>Continue in chat</h2>
+          <p>Open the target platform beside the current page.</p>
+        </article>
       </section>
 
       <section class="section features" id="features" aria-labelledby="features-title">
         <div class="section-heading">
           <p class="eyebrow">What it does</p>
-          <h2 id="features-title">A compact toolbar for repeated AI tasks</h2>
+          <h2 id="features-title">Fast actions for reading, writing, and research.</h2>
           <p>
-            AI Buddy keeps prompt actions close to the text you are reading, while leaving
-            configuration and platform behavior under your control.
+            AI Buddy is built for repeatable browser work: select something useful, trigger
+            the right prompt, and keep moving without tab switching.
           </p>
         </div>
         <div class="feature-grid">
           <article class="feature-card">
-            <h3>Selection toolbar</h3>
-            <p>Highlight text and launch common actions directly from the page.</p>
+            <span class="feature-icon">A</span>
+            <h3>Instant text actions</h3>
+            <p>Summarize, explain, translate, draft, polish, brainstorm, or ask about selected text.</p>
           </article>
           <article class="feature-card">
-            <h3>Reusable scenarios</h3>
-            <p>Group actions for learning, workplace, creative, or your own workflows.</p>
+            <span class="feature-icon">S</span>
+            <h3>Scenario libraries</h3>
+            <p>Group actions for learning, workplace, creative work, or your own custom workflow.</p>
           </article>
           <article class="feature-card">
-            <h3>Side panel chat</h3>
-            <p>Keep the source page visible while the chat platform handles the prompt.</p>
-          </article>
-          <article class="feature-card">
+            <span class="feature-icon">P</span>
             <h3>Prompt control</h3>
-            <p>Customize action templates, colors, toolbar order, and response language.</p>
+            <p>Customize templates, response language, toolbar order, colors, and platform behavior.</p>
           </article>
           <article class="feature-card">
-            <h3>Platform-aware sending</h3>
-            <p>AI chat platforms can auto-send; messaging platforms draft until you allow it.</p>
+            <span class="feature-icon">C</span>
+            <h3>Side panel context</h3>
+            <p>Keep the source page visible while the generated prompt opens beside it.</p>
           </article>
           <article class="feature-card">
-            <h3>Local configuration</h3>
-            <p>The extension stores preferences and actions, not your prompts or conversations.</p>
+            <span class="feature-icon">M</span>
+            <h3>Broad platform support</h3>
+            <p>Works with ChatGPT, Claude, Gemini, DeepSeek, Microsoft Copilot, and more.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">L</span>
+            <h3>Privacy-first local design</h3>
+            <p>No AI Buddy server stores chats or relays prompts; settings and actions stay in Chrome storage.</p>
           </article>
         </div>
       </section>
 
-      <section class="section showcase" id="gallery" aria-labelledby="gallery-title">
+      <section class="section demo" id="demo" aria-labelledby="demo-title">
         <div class="section-heading">
-          <p class="eyebrow">Screenshots</p>
-          <h2 id="gallery-title">Built around the browser surfaces you already use</h2>
+          <p class="eyebrow">Product tour</p>
+          <h2 id="demo-title">See how AI Buddy fits across your browser.</h2>
+          <p>
+            The extension has separate surfaces for quick selection actions, side panel work,
+            daily settings, and deeper prompt configuration.
+          </p>
         </div>
-        <div class="showcase-grid">
-          <figure class="showcase-item showcase-wide">
-            <img src="screenshot1.png" alt="AI Buddy toolbar appearing below selected Wikipedia text">
-            <figcaption>Selection toolbar with scenario and action buttons.</figcaption>
+        <div class="demo-grid">
+          <figure class="demo-card demo-wide">
+            <video src="ai_buddy_demo.webm" autoplay muted loop playsinline controls poster="screenshot1.png">
+              <a href="ai_buddy_demo.webm">Watch the AI Buddy demo video</a>
+            </video>
+            <figcaption>
+              <strong>Selection toolbar</strong>
+              <span>Trigger AI actions directly from highlighted text.</span>
+            </figcaption>
           </figure>
-          <figure class="showcase-item">
+          <figure class="demo-card">
             <img src="screenshot3.png" alt="AI Buddy side panel showing translated output next to a source webpage">
-            <figcaption>Side panel keeps the page and generated prompt in one view.</figcaption>
+            <figcaption>
+              <strong>Side panel assistant</strong>
+              <span>Continue with the AI platform while the page stays visible.</span>
+            </figcaption>
           </figure>
-          <figure class="showcase-item">
-            <img src="screenshot4.png" alt="AI Buddy popup for scenario, platform, language, and toolbar settings">
-            <figcaption>Popup controls for daily preferences and quick access.</figcaption>
+          <figure class="demo-card">
+            <img src="screenshot4.png" alt="AI Buddy popup controls for platform, language, and toolbar settings">
+            <figcaption>
+              <strong>Daily controls</strong>
+              <span>Switch platform, scenario, language, and toolbar behavior quickly.</span>
+            </figcaption>
           </figure>
-          <figure class="showcase-item showcase-wide">
+          <figure class="demo-card">
             <img src="screenshot2.png" alt="AI Buddy options page with scenario and action library configuration">
-            <figcaption>Options page for scenarios, action ordering, and reusable prompt templates.</figcaption>
+            <figcaption>
+              <strong>Action library</strong>
+              <span>Design reusable prompt actions and keep your toolbar focused.</span>
+            </figcaption>
           </figure>
         </div>
       </section>
 
       <section class="section install" id="install" aria-labelledby="install-title">
-        <div class="install-copy">
-          <p class="eyebrow">Local install</p>
-          <h2 id="install-title">Load AI Buddy as an unpacked extension</h2>
+        <div class="install-panel">
+          <p class="eyebrow">Install</p>
+          <h2 id="install-title">Get AI Buddy from the Chrome Web Store.</h2>
           <p>
-            Build the repository locally, then load the generated <code>dist/</code> folder
-            from Chrome's extensions page.
+            Install the extension, pin it in Chrome, choose your scenario and platform, then
+            highlight text on any page to start using the toolbar.
           </p>
+          <div class="install-actions">
+            <a
+              class="button button-primary"
+              href="https://chromewebstore.google.com/detail/eigpaeoigklelmfgnkljhbjjbpohenpn?utm_source=item-share-cb"
+            >
+              Add to Chrome
+            </a>
+            <a class="button button-secondary button-with-icon" href="https://github.com/mnbqwe10/ai_buddy">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.86 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.9c-2.78.62-3.37-1.21-3.37-1.21-.45-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.3 9.3 0 0 1 12 6.97c.85 0 1.7.12 2.5.34 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.56 5.06.36.32.68.94.68 1.9v2.81c0 .27.18.59.69.49A10.12 10.12 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path>
+              </svg>
+              GitHub
+            </a>
+          </div>
         </div>
-        <ol class="install-steps">
-          <li><code>npm install</code></li>
-          <li><code>npm run build</code></li>
-          <li>Open <code>chrome://extensions</code> and enable Developer mode.</li>
-          <li>Choose <strong>Load unpacked</strong> and select <code>dist/</code>.</li>
-          <li>Pin <strong>AI Buddy</strong> and select your scenario, platform, and language.</li>
-        </ol>
+        <div class="install-steps" aria-label="Setup steps">
+          <article>
+            <span>1</span>
+            <h3>Install the extension</h3>
+            <p>Use the Chrome Web Store link to add AI Buddy to your browser.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <h3>Choose your workflow</h3>
+            <p>Select your default scenario, AI platform, response language, and toolbar style.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <h3>Highlight and send</h3>
+            <p>Run actions from the toolbar and continue the prompt in Chrome's side panel.</p>
+          </article>
+        </div>
       </section>
 
-      <section class="notice" aria-labelledby="privacy-title">
+      <section class="section privacy" id="privacy" aria-labelledby="privacy-title">
         <div>
-          <h2 id="privacy-title">Personal project, privacy-minded behavior</h2>
+          <p class="eyebrow">Privacy-minded by design</p>
+          <h2 id="privacy-title">Free, local-first, and transparent.</h2>
           <p>
-            AI Buddy is not affiliated with any AI chat or messaging platform. You sign in
-            to your own platform account, and selected text is sent only when you trigger an action.
+            AI Buddy is free to use and open source. It does not store your chat messages, does not
+            run a third-party relay server, and sends selected text only to the platform you choose
+            when you trigger an action.
           </p>
         </div>
-        <a class="button button-secondary" href="https://github.com/mnbqwe10/ai_buddy/blob/main/docs/privacy.md">Read privacy notes</a>
+        <a class="button button-secondary" href="https://mnbqwe10.github.io/ai_buddy/privacy.html">Read privacy notes</a>
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>AI Buddy</span>
+      <a class="footer-brand" href="#top">
+        <img src="logo.png" alt="" aria-hidden="true">
+        <span>AI Buddy</span>
+      </a>
       <span>Chrome MV3 extension built with TypeScript, Vite, and React.</span>
+      <a href="https://github.com/mnbqwe10/ai_buddy">GitHub</a>
     </footer>
   </body>
 </html>
