@@ -1,0 +1,181 @@
+---
+layout: null
+title: AI Buddy
+description: Chrome selection toolbar for AI chat workflows
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Buddy - Chrome selection toolbar for AI chat</title>
+    <meta
+      name="description"
+      content="AI Buddy is a Chrome extension that turns selected page text into reusable prompts and sends them to your preferred chat platform from the side panel."
+    >
+    <link rel="stylesheet" href="landing.css">
+  </head>
+  <body>
+    <header class="site-header" aria-label="Main navigation">
+      <a class="brand" href="#top" aria-label="AI Buddy home">
+        <span class="brand-mark" aria-hidden="true">AI</span>
+        <span>AI Buddy</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/mnbqwe10/ai_buddy/blob/main/docs/README.zh-CN.md">中文</a>
+      </nav>
+      <a class="header-action" href="https://github.com/mnbqwe10/ai_buddy">GitHub</a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Chrome extension for fast AI workflows</p>
+          <h1 id="hero-title">AI Buddy</h1>
+          <p class="hero-lede">
+            Select text on any page, choose a reusable action, and send a ready-made prompt
+            to your preferred AI chat platform in Chrome's side panel.
+          </p>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button button-primary" href="#install">Install locally</a>
+            <a class="button button-secondary" href="https://github.com/mnbqwe10/ai_buddy">View source</a>
+          </div>
+          <dl class="hero-stats" aria-label="Project highlights">
+            <div>
+              <dt>7+</dt>
+              <dd>built-in actions</dd>
+            </div>
+            <div>
+              <dt>3</dt>
+              <dd>starter scenarios</dd>
+            </div>
+            <div>
+              <dt>MV3</dt>
+              <dd>Chrome extension</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="hero-media" aria-label="AI Buddy demo">
+          <img src="demo.gif" alt="AI Buddy selecting text on a webpage and sending a prompt from the toolbar">
+        </div>
+      </section>
+
+      <section class="workflow" aria-label="Workflow">
+        <div class="workflow-step">
+          <span>01</span>
+          <strong>Select page text</strong>
+          <p>Use the web content already in front of you without copying it into another tab.</p>
+        </div>
+        <div class="workflow-step">
+          <span>02</span>
+          <strong>Pick an action</strong>
+          <p>Explain, translate, summarize, draft, polish, brainstorm, or ask a custom question.</p>
+        </div>
+        <div class="workflow-step">
+          <span>03</span>
+          <strong>Continue in side panel</strong>
+          <p>The target platform opens beside the page with the generated prompt ready to go.</p>
+        </div>
+      </section>
+
+      <section class="section features" id="features" aria-labelledby="features-title">
+        <div class="section-heading">
+          <p class="eyebrow">What it does</p>
+          <h2 id="features-title">A compact toolbar for repeated AI tasks</h2>
+          <p>
+            AI Buddy keeps prompt actions close to the text you are reading, while leaving
+            configuration and platform behavior under your control.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>Selection toolbar</h3>
+            <p>Highlight text and launch common actions directly from the page.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Reusable scenarios</h3>
+            <p>Group actions for learning, workplace, creative, or your own workflows.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Side panel chat</h3>
+            <p>Keep the source page visible while the chat platform handles the prompt.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Prompt control</h3>
+            <p>Customize action templates, colors, toolbar order, and response language.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Platform-aware sending</h3>
+            <p>AI chat platforms can auto-send; messaging platforms draft until you allow it.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Local configuration</h3>
+            <p>The extension stores preferences and actions, not your prompts or conversations.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section showcase" id="gallery" aria-labelledby="gallery-title">
+        <div class="section-heading">
+          <p class="eyebrow">Screenshots</p>
+          <h2 id="gallery-title">Built around the browser surfaces you already use</h2>
+        </div>
+        <div class="showcase-grid">
+          <figure class="showcase-item showcase-wide">
+            <img src="screenshot1.png" alt="AI Buddy toolbar appearing below selected Wikipedia text">
+            <figcaption>Selection toolbar with scenario and action buttons.</figcaption>
+          </figure>
+          <figure class="showcase-item">
+            <img src="screenshot3.png" alt="AI Buddy side panel showing translated output next to a source webpage">
+            <figcaption>Side panel keeps the page and generated prompt in one view.</figcaption>
+          </figure>
+          <figure class="showcase-item">
+            <img src="screenshot4.png" alt="AI Buddy popup for scenario, platform, language, and toolbar settings">
+            <figcaption>Popup controls for daily preferences and quick access.</figcaption>
+          </figure>
+          <figure class="showcase-item showcase-wide">
+            <img src="screenshot2.png" alt="AI Buddy options page with scenario and action library configuration">
+            <figcaption>Options page for scenarios, action ordering, and reusable prompt templates.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section install" id="install" aria-labelledby="install-title">
+        <div class="install-copy">
+          <p class="eyebrow">Local install</p>
+          <h2 id="install-title">Load AI Buddy as an unpacked extension</h2>
+          <p>
+            Build the repository locally, then load the generated <code>dist/</code> folder
+            from Chrome's extensions page.
+          </p>
+        </div>
+        <ol class="install-steps">
+          <li><code>npm install</code></li>
+          <li><code>npm run build</code></li>
+          <li>Open <code>chrome://extensions</code> and enable Developer mode.</li>
+          <li>Choose <strong>Load unpacked</strong> and select <code>dist/</code>.</li>
+          <li>Pin <strong>AI Buddy</strong> and select your scenario, platform, and language.</li>
+        </ol>
+      </section>
+
+      <section class="notice" aria-labelledby="privacy-title">
+        <div>
+          <h2 id="privacy-title">Personal project, privacy-minded behavior</h2>
+          <p>
+            AI Buddy is not affiliated with any AI chat or messaging platform. You sign in
+            to your own platform account, and selected text is sent only when you trigger an action.
+          </p>
+        </div>
+        <a class="button button-secondary" href="https://github.com/mnbqwe10/ai_buddy/blob/main/docs/privacy.md">Read privacy notes</a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>AI Buddy</span>
+      <span>Chrome MV3 extension built with TypeScript, Vite, and React.</span>
+    </footer>
+  </body>
+</html>
