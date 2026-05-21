@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { createDefaultAppState } from "../domain/defaults";
 import { resolveSendMode } from "../domain/sendPolicy";
 import { sidePanelPortName } from "../background/promptRouter";
-import type { PendingPrompt, PromptAttachment, RuntimeMessage } from "../shared/messages";
+import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
 import { useAppState } from "../shared/useAppState";
 import { bridgeSourceForPlatform } from "./platformBridge";
@@ -19,24 +19,6 @@ function isDeliverPromptMessage(message: unknown): message is Extract<RuntimeMes
       message.type === "deliver-prompt" &&
       "prompt" in message,
   );
-}
-
-async function dataUrlToBlob(dataUrl: string) {
-  return fetch(dataUrl).then((response) => response.blob());
-}
-
-async function copyImageAttachmentToClipboard(attachments: PromptAttachment[] | undefined) {
-  const image = attachments?.find((attachment) => attachment.kind === "image");
-  if (!image || typeof ClipboardItem !== "function") {
-    return false;
-  }
-
-  await navigator.clipboard.write([
-    new ClipboardItem({
-      [image.mimeType]: await dataUrlToBlob(image.dataUrl),
-    }),
-  ]);
-  return true;
 }
 
 function SidePanelApp() {
@@ -165,21 +147,11 @@ function SidePanelApp() {
 
       if (message.type === "inject-result") {
         const requestId = typeof message.requestId === "string" ? message.requestId : "";
-        const requestPrompt = inflightPromptsRef.current.get(requestId);
         inflightPromptsRef.current.delete(requestId);
 
         if (message.result?.ok) {
-          if (message.result.attachmentDelivery === "manualClipboard") {
-            try {
-              const copied = await copyImageAttachmentToClipboard(requestPrompt?.attachments);
-              setStatus(
-                copied
-                  ? "Prompt drafted. Screenshot copied; paste it into the chat."
-                  : "Prompt drafted. Screenshot attachment needs manual upload.",
-              );
-            } catch {
-              setStatus("Prompt drafted. Screenshot attachment needs manual upload.");
-            }
+          if (message.result.attachmentDelivery === "manualUpload") {
+            setStatus("Prompt drafted. Screenshot attachment needs manual upload.");
             return;
           }
 

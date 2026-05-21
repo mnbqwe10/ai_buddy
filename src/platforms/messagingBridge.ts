@@ -621,8 +621,8 @@ export async function injectPrompt(
   }
 
   const effectiveAttachmentDelivery =
-    attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualClipboard" : attachmentDelivery;
-  const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualClipboard";
+    attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualUpload" : attachmentDelivery;
+  const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualUpload";
   if (shouldSubmit && !(await submitComposer(composer, promptText))) {
     return { ok: false, error: "Message drafted, but the chat platform did not accept the send action." };
   }

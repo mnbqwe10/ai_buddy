@@ -22,8 +22,10 @@ Capture part of the current page, add a short instruction, and send the screensh
 
 AI Buddy is a Chrome extension that adds a selection toolbar for sending selected page text to an AI chat platform. It opens the platform in Chrome's side panel and uses reusable scenario actions such as Explain, Translate, Summarize, Draft Reply, Polish, Brainstorm, and Visualize.
 
-## What's New in v1.1.0
+## What's New in v1.1.1
 
+- Removed the `clipboardWrite` manifest permission and the screenshot-to-clipboard fallback.
+- If a screenshot cannot be attached automatically, AI Buddy drafts the prompt and asks you to upload the screenshot manually.
 - Improved screenshot prompt delivery for Claude, DeepSeek, and WhatsApp Web.
 - Claude now waits for its upload surface before attaching screenshots and avoids sending text alone if an upload fails.
 - DeepSeek now waits longer for slow image uploads and targets its enabled send control more reliably.

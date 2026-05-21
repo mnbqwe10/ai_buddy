@@ -339,8 +339,8 @@ export async function injectPrompt(
   }
 
   const effectiveAttachmentDelivery =
-    attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualClipboard" : attachmentDelivery;
-  const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualClipboard";
+    attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualUpload" : attachmentDelivery;
+  const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualUpload";
   if (shouldSubmit && !(await submitComposer(composer))) {
     return { ok: false, error: "Prompt drafted, but the send button was not ready." };
   }

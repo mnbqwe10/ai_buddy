@@ -388,7 +388,7 @@ describe("AI chat bridge", () => {
     await vi.advanceTimersByTimeAsync(4_000);
     const result = await resultPromise;
 
-    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualClipboard" });
+    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualUpload" });
     expect(composer.value).toBe("Do not send without image");
     expect(clickSend).not.toHaveBeenCalled();
   });
@@ -404,7 +404,7 @@ describe("AI chat bridge", () => {
 
     const result = await injectPrompt("Review the screenshot", true, [imageAttachment()]);
 
-    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualClipboard" });
+    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualUpload" });
     expect(composer.value).toBe("Review the screenshot");
     expect(clickSend).not.toHaveBeenCalled();
   });

@@ -541,7 +541,7 @@ describe("messaging bridge", () => {
 
     const result = await injectPrompt("Review the screenshot", true, [imageAttachment()]);
 
-    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualClipboard" });
+    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualUpload" });
     expect(composer.textContent).toBe("Review the screenshot");
     expect(clickSend).not.toHaveBeenCalled();
   });

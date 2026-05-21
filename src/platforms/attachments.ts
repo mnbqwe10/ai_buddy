@@ -1,6 +1,6 @@
 import type { PromptAttachment } from "../shared/messages";
 
-export type AttachmentDelivery = "attached" | "manualClipboard";
+export type AttachmentDelivery = "attached" | "manualUpload";
 export type AttachmentUploadResult = "ready" | "failed";
 export interface AttachmentDeliveryOptions {
   preferPaste?: boolean;
@@ -275,5 +275,5 @@ export async function deliverImageAttachments(
   const attached = options.preferPaste
     ? pasteFiles(composer, files) || dropFiles(composer, files) || attachViaFileInput(files)
     : attachViaFileInput(files) || pasteFiles(composer, files) || dropFiles(composer, files);
-  return attached ? "attached" : "manualClipboard";
+  return attached ? "attached" : "manualUpload";
 }
