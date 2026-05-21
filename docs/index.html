@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Buddy - Chrome extension for AI workflows</title>
+    <title>AI Buddy - Chrome extension for screenshot and AI workflows</title>
     <meta
       name="description"
-      content="AI Buddy is a Chrome extension that turns selected page text into reusable prompts and sends them to your preferred AI chat platform from Chrome's side panel."
+      content="AI Buddy is a Chrome extension that turns selected page text and screenshots into reusable prompts and sends them to your preferred AI chat platform from Chrome's side panel."
     >
     <meta property="og:title" content="AI Buddy - Chrome extension">
     <meta
       property="og:description"
-      content="Select text, choose an AI action, and continue the conversation in Chrome's side panel."
+      content="Capture screenshots or select text, choose an AI action, and continue the conversation in Chrome's side panel."
     >
     <meta property="og:image" content="https://mnbqwe10.github.io/ai_buddy/banner_dark.png">
     <meta property="og:url" content="https://mnbqwe10.github.io/ai_buddy/">
@@ -52,10 +52,10 @@
           <img src="banner_dark.png" alt="AI Buddy Chrome Extension">
         </div>
         <div class="hero-copy">
-          <p class="eyebrow">Free Chrome sidebar assistant</p>
-          <h1 id="hero-title">Your AI chat workflow, right beside the page.</h1>
+          <p class="eyebrow">Free Chrome screenshot and sidebar assistant</p>
+          <h1 id="hero-title">Send screenshots and page context to AI chat.</h1>
           <p class="hero-lede">
-            Highlight text on any website, choose a reusable action, and send a polished
+            Capture part of a webpage or highlight text, choose a reusable action, and send a polished
             prompt to your preferred AI chat platform without losing the page context.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
@@ -73,7 +73,7 @@
             <a class="button button-secondary" href="#demo">See AI Buddy in action</a>
           </div>
           <div class="trust-row" aria-label="Project highlights">
-            <span>Free to use</span>
+            <span>Screenshot prompts</span>
             <span>No AI Buddy backend</span>
             <span>No chat message storage</span>
           </div>
@@ -298,13 +298,18 @@
       <section class="section features" id="features" aria-labelledby="features-title">
         <div class="section-heading">
           <p class="eyebrow">What it does</p>
-          <h2 id="features-title">Fast actions for reading, writing, and research.</h2>
+          <h2 id="features-title">Fast actions for screenshots, reading, writing, and research.</h2>
           <p>
-            AI Buddy is built for repeatable browser work: select something useful, trigger
+            AI Buddy is built for repeatable browser work: capture or select something useful, trigger
             the right prompt, and keep moving without tab switching.
           </p>
         </div>
         <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon">I</span>
+            <h3>Screenshot prompts</h3>
+            <p>Capture part of the page, add an instruction, and send the image plus prompt text together.</p>
+          </article>
           <article class="feature-card">
             <span class="feature-icon">A</span>
             <h3>Instant text actions</h3>
@@ -340,14 +345,23 @@
 
       <section class="section demo" id="demo" aria-labelledby="demo-title">
         <div class="section-heading">
-          <p class="eyebrow">Product tour</p>
-          <h2 id="demo-title">See how AI Buddy fits across your browser.</h2>
+          <p class="eyebrow">Demo videos</p>
+          <h2 id="demo-title">See screenshot prompts and text actions in your browser.</h2>
           <p>
             The extension has separate surfaces for quick selection actions, side panel work,
             daily settings, and deeper prompt configuration.
           </p>
         </div>
         <div class="demo-grid">
+          <figure class="demo-card demo-wide">
+            <video src="ai_buddy_screenshot_demo.webm" autoplay muted loop playsinline controls poster="screenshot5.png">
+              <a href="ai_buddy_screenshot_demo.webm">Watch the AI Buddy screenshot prompt demo video</a>
+            </video>
+            <figcaption>
+              <strong>Screenshot prompts</strong>
+              <span>Capture a page region, add a short instruction, and send the screenshot with the prompt.</span>
+            </figcaption>
+          </figure>
           <figure class="demo-card demo-wide">
             <video src="ai_buddy_demo.webm" autoplay muted loop playsinline controls poster="screenshot1.png">
               <a href="ai_buddy_demo.webm">Watch the AI Buddy demo video</a>

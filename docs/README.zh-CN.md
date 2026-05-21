@@ -1,10 +1,22 @@
 # AI Buddy
 
-厌倦了反复复制网页内容、切换标签页、再把上下文粘贴给 AI 机器人？AI Buddy 让你在网页上选中文字，点击一个动作，就能把整理好的提示词发送到 Chrome 侧边栏中的常用聊天平台。
+厌倦了反复复制网页内容、切换标签页、再把上下文粘贴给 AI 机器人？AI Buddy 让你在网页上选中文字或截取页面截图，点击一个动作，就能把整理好的提示词发送到 Chrome 侧边栏中的常用聊天平台。
 
 [English README](../README.md)
 
-![AI Buddy demo](demo.gif)
+## 截图提示词
+
+在当前网页中框选截图，补充一句简短需求，然后把截图和提示词一起发送到支持的平台。AI Buddy 会处理 Claude、DeepSeek 和 WhatsApp Web 等平台各自不同的上传与发送流程。
+
+<video src="ai_buddy_screenshot_demo.webm" poster="screenshot5.png" controls muted playsinline>
+  <a href="ai_buddy_screenshot_demo.webm">观看截图提示词演示</a>
+</video>
+
+## 演示视频
+
+<video src="ai_buddy_demo.webm" poster="screenshot1.png" controls muted playsinline>
+  <a href="ai_buddy_demo.webm">观看选中文本工具栏演示</a>
+</video>
 
 AI Buddy 是一个 Chrome 扩展，会在网页选中文本后显示快捷工具栏，帮助你把选中的内容发送到 AI 聊天平台。它会在 Chrome 侧边栏中打开目标平台，并提供 Explain、Translate、Summarize、Draft Reply、Polish、Brainstorm、Visualize 等可复用场景动作。
 

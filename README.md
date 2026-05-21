@@ -2,11 +2,23 @@
   <img src="assets/banner_light.png" width="400">
 </p>
 
-Tired of copying page text, switching tabs, and pasting the same context into your AI bot? AI Buddy lets you select text on any page, choose an action, and send a ready-made prompt to your preferred chat platform from Chrome's side panel.
+Tired of copying page text, switching tabs, and pasting the same context into your AI bot? AI Buddy lets you select text or capture a screenshot on any page, choose an action, and send a ready-made prompt to your preferred chat platform from Chrome's side panel.
 
 [中文说明](docs/README.zh-CN.md)
 
-![AI Buddy demo](docs/demo.gif)
+## Screenshot Prompts
+
+Capture part of the current page, add a short instruction, and send the screenshot plus prompt text to supported chat platforms from the side panel. AI Buddy handles the platform-specific upload flow for Claude, DeepSeek, and WhatsApp Web.
+
+<video src="docs/ai_buddy_screenshot_demo.webm" poster="docs/screenshot5.png" controls muted playsinline>
+  <a href="docs/ai_buddy_screenshot_demo.webm">Watch the screenshot prompt demo</a>
+</video>
+
+## Demo Videos
+
+<video src="docs/ai_buddy_demo.webm" poster="docs/screenshot1.png" controls muted playsinline>
+  <a href="docs/ai_buddy_demo.webm">Watch the selection toolbar demo</a>
+</video>
 
 AI Buddy is a Chrome extension that adds a selection toolbar for sending selected page text to an AI chat platform. It opens the platform in Chrome's side panel and uses reusable scenario actions such as Explain, Translate, Summarize, Draft Reply, Polish, Brainstorm, and Visualize.
 
