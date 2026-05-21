@@ -62,6 +62,32 @@ function mockExecCommandInsertText(target: HTMLElement) {
   });
 }
 
+function mockExecCommandInsertTextIntoActiveElement() {
+  Object.defineProperty(document, "execCommand", {
+    configurable: true,
+    value: vi.fn((command: string, _showUi?: boolean, value?: string) => {
+      if (command !== "insertText") {
+        return false;
+      }
+
+      const target = document.activeElement;
+      if (!(target instanceof HTMLElement)) {
+        return false;
+      }
+
+      target.textContent = value ?? "";
+      target.dispatchEvent(
+        new InputEvent("input", {
+          bubbles: true,
+          inputType: "insertText",
+          data: value ?? "",
+        }),
+      );
+      return true;
+    }),
+  });
+}
+
 function createWhatsAppComposer() {
   const footer = document.createElement("footer");
   const composer = document.createElement("div");
@@ -368,6 +394,88 @@ describe("messaging bridge", () => {
 
     expect(result).toEqual({ ok: true, mode: "sent" });
     expect(clickSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the WhatsApp media dialog caption composer for image prompts", async () => {
+    vi.stubGlobal(
+      "DataTransfer",
+      class {
+        data = new Map<string, string>();
+        files: File[] = [];
+        types: string[] = [];
+        items = {
+          add: (file: File) => {
+            this.files.push(file);
+          },
+        };
+        getData = (format: string) => this.data.get(format) ?? "";
+        setData = (format: string, value: string) => {
+          this.data.set(format, value);
+          if (!this.types.includes(format)) {
+            this.types.push(format);
+          }
+        };
+      },
+    );
+
+    const { footer, composer: footerComposer } = createWhatsAppComposer();
+    mockExecCommandInsertTextIntoActiveElement();
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/png";
+    const fileInputChanged = vi.fn();
+    fileInput.addEventListener("change", fileInputChanged);
+    const footerSend = document.createElement("button");
+    footerSend.setAttribute("aria-label", "Send");
+    markVisible(footerSend);
+
+    const clickFooterSend = vi.fn(() => {
+      footerComposer.textContent = "";
+    });
+    footerSend.addEventListener("click", clickFooterSend);
+    footer.append(fileInput, footerSend);
+
+    const clickDialogSend = vi.fn();
+    const dialogState: { captionComposer?: HTMLElement } = {};
+    footerComposer.addEventListener("paste", (event) => {
+      expect((event.clipboardData?.files ?? []).length).toBe(1);
+      event.preventDefault();
+
+      const overlay = document.createElement("div");
+      markVisible(overlay);
+
+      const image = document.createElement("img");
+      image.alt = "Screenshot preview";
+
+      const captionComposer = document.createElement("div");
+      dialogState.captionComposer = captionComposer;
+      captionComposer.setAttribute("role", "textbox");
+      captionComposer.setAttribute("contenteditable", "true");
+      captionComposer.setAttribute("data-testid", "media-caption-input-container");
+      captionComposer.setAttribute("aria-label", "Add a caption");
+      markVisible(captionComposer);
+
+      const dialogSend = document.createElement("button");
+      dialogSend.setAttribute("aria-label", "Send");
+      markVisible(dialogSend);
+      dialogSend.addEventListener("click", () => {
+        clickDialogSend();
+        captionComposer.replaceChildren();
+      });
+
+      overlay.append(image, captionComposer, dialogSend);
+      document.body.append(overlay);
+    });
+
+    const result = await injectPrompt("Send this with the screenshot", true, [imageAttachment()]);
+
+    expect(result).toEqual({ ok: true, mode: "sent", attachmentDelivery: "attached" });
+    expect(clickDialogSend).toHaveBeenCalledTimes(1);
+    expect(clickFooterSend).not.toHaveBeenCalled();
+    expect(fileInputChanged).not.toHaveBeenCalled();
+    expect(footerComposer.textContent).toBe("");
+    expect(dialogState.captionComposer?.textContent).toBe("");
   });
 
   it("sends WhatsApp prompts with Enter before clicking any send control", async () => {

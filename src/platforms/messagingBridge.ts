@@ -49,7 +49,37 @@ function isUsableComposer(element: HTMLElement | HTMLTextAreaElement | HTMLInput
   return visible(element);
 }
 
+function findMediaDialogComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLInputElement | null {
+  const selectors = [
+    "[data-testid='media-caption-input-container'][role='textbox']",
+    "[data-testid='media-caption-input-container'][contenteditable='true']",
+    "[role='dialog'] [role='textbox'][contenteditable='true']",
+    "[role='dialog'] [contenteditable='true'][aria-label*='caption' i]",
+    "[role='dialog'] [contenteditable='true'][aria-placeholder*='caption' i]",
+    "[role='dialog'] [contenteditable='true'][data-tab]",
+    "[data-animate-modal-popup='true'] [role='textbox'][contenteditable='true']",
+    "[data-animate-modal-popup='true'] [contenteditable='true'][data-tab]",
+  ];
+
+  for (const selector of selectors) {
+    const elements = Array.from(
+      doc.querySelectorAll<HTMLElement | HTMLTextAreaElement | HTMLInputElement>(selector),
+    ).filter((element) => isUsableComposer(element) && !element.closest("footer"));
+    const element = elements.at(-1);
+    if (element) {
+      return element;
+    }
+  }
+
+  return null;
+}
+
 function findComposer(doc = document): HTMLElement | HTMLTextAreaElement | HTMLInputElement | null {
+  const mediaDialogComposer = findMediaDialogComposer(doc);
+  if (mediaDialogComposer) {
+    return mediaDialogComposer;
+  }
+
   const selectors = [
     "footer [role='textbox'][contenteditable='true']",
     "footer [contenteditable='true'][data-tab]",
@@ -120,16 +150,25 @@ function composerIsWhatsAppComposer(composer: HTMLElement | HTMLTextAreaElement 
     return false;
   }
 
+  if (composer.matches("[data-testid='media-caption-input-container']")) {
+    return true;
+  }
+
   const composerLabel = `${composer.getAttribute("aria-label") ?? ""} ${
     composer.getAttribute("aria-placeholder") ?? ""
   }`.toLowerCase();
 
   return Boolean(
-    composer.closest("footer") &&
-      composer.matches("[contenteditable='true']") &&
-      (composer.getAttribute("role") === "textbox" ||
-        composer.hasAttribute("data-tab") ||
-        composerLabel.includes("message")),
+    composer.matches("[contenteditable='true']") &&
+      ((composer.closest("footer") &&
+        (composer.getAttribute("role") === "textbox" ||
+          composer.hasAttribute("data-tab") ||
+          composerLabel.includes("message"))) ||
+        (composer.closest("[role='dialog'],[data-animate-modal-popup='true']") &&
+          (composer.getAttribute("role") === "textbox" ||
+            composer.hasAttribute("data-tab") ||
+            composerLabel.includes("caption") ||
+            composerLabel.includes("message")))),
   );
 }
 
@@ -392,6 +431,19 @@ function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputEl
 function whatsappSendControl(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
   const scopes: ParentNode[] = [];
   if (composer instanceof HTMLElement) {
+    const mediaDialog = composer.closest<HTMLElement>("[role='dialog'],[data-animate-modal-popup='true']");
+    if (mediaDialog) {
+      scopes.push(mediaDialog);
+    }
+
+    if (composer.matches("[data-testid='media-caption-input-container']")) {
+      let parent = composer.parentElement;
+      for (let depth = 0; parent && depth < 6; depth += 1) {
+        scopes.push(parent);
+        parent = parent.parentElement;
+      }
+    }
+
     const footer = composer.closest("footer");
     if (footer) {
       scopes.push(footer);
@@ -558,15 +610,19 @@ export async function injectPrompt(
     return { ok: false, error: "Messaging composer not found" };
   }
 
-  const attachmentDelivery = await deliverImageAttachments(composer, attachments);
-  await waitForImageAttachmentUpload(attachmentDelivery);
+  const attachmentDelivery = await deliverImageAttachments(composer, attachments, {
+    preferPaste: composerIsWhatsAppComposer(composer),
+  });
+  const attachmentUploadResult = await waitForImageAttachmentUpload(attachmentDelivery);
   composer = findComposer() ?? composer;
 
   if (!(await setComposerText(composer, promptText))) {
     return { ok: false, error: "Unable to draft message" };
   }
 
-  const shouldSubmit = submit && attachmentDelivery !== "manualClipboard";
+  const effectiveAttachmentDelivery =
+    attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualClipboard" : attachmentDelivery;
+  const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualClipboard";
   if (shouldSubmit && !(await submitComposer(composer, promptText))) {
     return { ok: false, error: "Message drafted, but the chat platform did not accept the send action." };
   }
@@ -574,7 +630,7 @@ export async function injectPrompt(
   return {
     ok: true,
     mode: shouldSubmit ? "sent" : "drafted",
-    ...(attachmentDelivery ? { attachmentDelivery } : {}),
+    ...(effectiveAttachmentDelivery ? { attachmentDelivery: effectiveAttachmentDelivery } : {}),
   };
 }
 

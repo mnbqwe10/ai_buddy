@@ -1,9 +1,13 @@
 import type { PromptAttachment } from "../shared/messages";
 
 export type AttachmentDelivery = "attached" | "manualClipboard";
+export type AttachmentUploadResult = "ready" | "failed";
+export interface AttachmentDeliveryOptions {
+  preferPaste?: boolean;
+}
 
-const uploadSettleMinimumMs = 1_200;
-const uploadSettleMaximumMs = 10_000;
+const uploadSettleMinimumMs = 3_000;
+const uploadSettleMaximumMs = 20_000;
 const uploadSettlePollMs = 250;
 
 function delay(ms: number) {
@@ -101,6 +105,38 @@ function imageFileInputCandidates(doc = document) {
   });
 }
 
+export async function waitForImageAttachmentSurface(
+  attachments: PromptAttachment[] | undefined,
+  options: { minimumSettleMs?: number; maximumWaitMs?: number } = {},
+) {
+  const imageAttachments = attachments?.filter((attachment) => attachment.kind === "image") ?? [];
+  if (imageAttachments.length === 0) {
+    return;
+  }
+
+  const minimumSettleMs = options.minimumSettleMs ?? 0;
+  const maximumWaitMs = options.maximumWaitMs ?? 0;
+  const startedAt = Date.now();
+  const deadline = startedAt + maximumWaitMs;
+  let stablePolls = 0;
+
+  while (Date.now() <= deadline) {
+    const hasSettled = Date.now() - startedAt >= minimumSettleMs;
+    const hasFileInput = imageFileInputCandidates().length > 0;
+
+    if (hasSettled && hasFileInput) {
+      stablePolls += 1;
+      if (stablePolls >= 2) {
+        return;
+      }
+    } else {
+      stablePolls = 0;
+    }
+
+    await delay(uploadSettlePollMs);
+  }
+}
+
 function attachViaFileInput(files: File[]) {
   const dataTransfer = createDataTransfer(files);
   if (!dataTransfer) {
@@ -164,9 +200,40 @@ function activeUploadIndicators(doc = document) {
   });
 }
 
-export async function waitForImageAttachmentUpload(delivery: AttachmentDelivery | undefined) {
+function uploadFailureIndicators(doc = document) {
+  const selectors = [
+    "[role='alert']",
+    "[aria-live]",
+    "[data-testid*='toast' i]",
+    "[data-testid*='error' i]",
+    "[class*='toast' i]",
+    "[class*='error' i]",
+  ];
+  const indicators = new Set<Element>();
+
+  for (const selector of selectors) {
+    for (const element of doc.querySelectorAll(selector)) {
+      indicators.add(element);
+    }
+  }
+
+  return Array.from(indicators).filter((element) => {
+    if (!visible(element)) {
+      return false;
+    }
+
+    const text = `${element.getAttribute("aria-label") ?? ""} ${element.getAttribute("title") ?? ""} ${
+      element.textContent ?? ""
+    }`;
+    return /\b(file|upload|uploads|attachment|image)\b/i.test(text) && /\b(failed|fail|error|try again|unsupported)\b/i.test(text);
+  });
+}
+
+export async function waitForImageAttachmentUpload(
+  delivery: AttachmentDelivery | undefined,
+): Promise<AttachmentUploadResult> {
   if (delivery !== "attached") {
-    return;
+    return "ready";
   }
 
   await delay(uploadSettleMinimumMs);
@@ -175,10 +242,14 @@ export async function waitForImageAttachmentUpload(delivery: AttachmentDelivery 
   let stablePolls = 0;
 
   while (Date.now() <= deadline) {
+    if (uploadFailureIndicators().length > 0) {
+      return "failed";
+    }
+
     if (activeUploadIndicators().length === 0) {
       stablePolls += 1;
       if (stablePolls >= 2) {
-        return;
+        return "ready";
       }
     } else {
       stablePolls = 0;
@@ -186,11 +257,14 @@ export async function waitForImageAttachmentUpload(delivery: AttachmentDelivery 
 
     await delay(uploadSettlePollMs);
   }
+
+  return uploadFailureIndicators().length > 0 ? "failed" : "ready";
 }
 
 export async function deliverImageAttachments(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   attachments: PromptAttachment[] | undefined,
+  options: AttachmentDeliveryOptions = {},
 ): Promise<AttachmentDelivery | undefined> {
   const imageAttachments = attachments?.filter((attachment) => attachment.kind === "image") ?? [];
   if (imageAttachments.length === 0) {
@@ -198,6 +272,8 @@ export async function deliverImageAttachments(
   }
 
   const files = imageAttachments.map(dataUrlToFile);
-  const attached = pasteFiles(composer, files) || dropFiles(composer, files) || attachViaFileInput(files);
+  const attached = options.preferPaste
+    ? pasteFiles(composer, files) || dropFiles(composer, files) || attachViaFileInput(files)
+    : attachViaFileInput(files) || pasteFiles(composer, files) || dropFiles(composer, files);
   return attached ? "attached" : "manualClipboard";
 }

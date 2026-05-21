@@ -174,14 +174,16 @@ export async function injectPrompt(
   }
 
   const attachmentDelivery = await deliverImageAttachments(composer, attachments);
-  await waitForImageAttachmentUpload(attachmentDelivery);
+  const attachmentUploadResult = await waitForImageAttachmentUpload(attachmentDelivery);
   composer = findComposer() ?? composer;
 
   if (!setComposerText(composer, promptText)) {
     return { ok: false, error: "Unable to populate Copilot composer" };
   }
 
-  const shouldSubmit = submit && attachmentDelivery !== "manualClipboard";
+  const effectiveAttachmentDelivery =
+    attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualClipboard" : attachmentDelivery;
+  const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualClipboard";
   if (shouldSubmit && !submitComposer(composer)) {
     return { ok: false, error: "Unable to submit Copilot prompt" };
   }
@@ -189,7 +191,7 @@ export async function injectPrompt(
   return {
     ok: true,
     mode: shouldSubmit ? "sent" : "drafted",
-    ...(attachmentDelivery ? { attachmentDelivery } : {}),
+    ...(effectiveAttachmentDelivery ? { attachmentDelivery: effectiveAttachmentDelivery } : {}),
   };
 }
 
