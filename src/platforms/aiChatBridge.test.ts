@@ -1,10 +1,24 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { injectPrompt } from "./aiChatBridge";
+import type { PromptAttachment } from "../shared/messages";
+
+function imageAttachment(): PromptAttachment {
+  return {
+    id: "image-1",
+    kind: "image",
+    mimeType: "image/png",
+    fileName: "capture.png",
+    dataUrl: "data:image/png;base64,AA==",
+    width: 1,
+    height: 1,
+  };
+}
 
 describe("AI chat bridge", () => {
   afterEach(() => {
     document.body.innerHTML = "";
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -75,5 +89,56 @@ describe("AI chat bridge", () => {
     expect(result).toEqual({ ok: true, mode: "sent" });
     expect(composer.textContent).toBe("Ask Gemini");
     expect(clickSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends when an image paste is accepted before drafting text", async () => {
+    vi.stubGlobal(
+      "DataTransfer",
+      class {
+        files: File[] = [];
+        items = {
+          add: (file: File) => {
+            this.files.push(file);
+          },
+        };
+      },
+    );
+
+    const composer = document.createElement("textarea");
+    composer.id = "prompt-textarea";
+    const sendButton = document.createElement("button");
+    sendButton.dataset.testid = "send-button";
+    const pasteSeen = vi.fn();
+    const clickSend = vi.fn();
+
+    composer.addEventListener("paste", (event) => {
+      pasteSeen((event.clipboardData?.files ?? []).length);
+      event.preventDefault();
+    });
+    sendButton.addEventListener("click", clickSend);
+    document.body.append(composer, sendButton);
+
+    const result = await injectPrompt("Review the screenshot", true, [imageAttachment()]);
+
+    expect(result).toEqual({ ok: true, mode: "sent", attachmentDelivery: "attached" });
+    expect(pasteSeen).toHaveBeenCalledWith(1);
+    expect(composer.value).toBe("Review the screenshot");
+    expect(clickSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("drafts instead of submitting when image attachment needs manual paste", async () => {
+    const composer = document.createElement("textarea");
+    composer.id = "prompt-textarea";
+    const sendButton = document.createElement("button");
+    sendButton.dataset.testid = "send-button";
+    const clickSend = vi.fn();
+    sendButton.addEventListener("click", clickSend);
+    document.body.append(composer, sendButton);
+
+    const result = await injectPrompt("Review the screenshot", true, [imageAttachment()]);
+
+    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualClipboard" });
+    expect(composer.value).toBe("Review the screenshot");
+    expect(clickSend).not.toHaveBeenCalled();
   });
 });

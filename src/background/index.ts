@@ -2,6 +2,7 @@ import { ensureAppState } from "../shared/storage";
 import type { RuntimeMessage } from "../shared/messages";
 import { createPromptRouter } from "./promptRouter";
 import { platformFrameRules } from "./platformFrameRules";
+import { cropScreenshotDataUrl } from "./screenshotCapture";
 
 const promptRouter = createPromptRouter();
 
@@ -50,6 +51,13 @@ function openSidePanel(target: chrome.runtime.MessageSender | { windowId: number
   }
 }
 
+async function captureScreenshotRegion(message: Extract<RuntimeMessage, { type: "capture-screenshot-region" }>, sender: chrome.runtime.MessageSender) {
+  const dataUrl = typeof sender.tab?.windowId === "number"
+    ? await chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: "png" })
+    : await chrome.tabs.captureVisibleTab({ format: "png" });
+  return cropScreenshotDataUrl(dataUrl, message.region);
+}
+
 chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendResponse) => {
   if (!message) {
     return;
@@ -67,6 +75,16 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendRespo
     }
     sendResponse({ ok: true, delivered });
     return;
+  }
+
+  if (message.type === "capture-screenshot-region") {
+    void captureScreenshotRegion(message, sender)
+      .then((attachment) => sendResponse({ ok: true, attachment }))
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        sendResponse({ ok: false, error: errorMessage });
+      });
+    return true;
   }
 
   if (message.type === "claim-pending-prompt") {

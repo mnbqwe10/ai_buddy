@@ -12,6 +12,16 @@ function PopupApp() {
     chrome.runtime.sendMessage({ type: "open-side-panel" });
   }
 
+  async function captureScreenshot() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (typeof tab?.id !== "number") {
+      return;
+    }
+
+    await chrome.tabs.sendMessage(tab.id, { type: "start-screenshot-capture" });
+    window.close();
+  }
+
   if (isLoading || !state) {
     return <main className="popup-shell">Loading...</main>;
   }
@@ -83,6 +93,10 @@ function PopupApp() {
 
       <button type="button" onClick={openSidePanel}>
         Open side panel
+      </button>
+
+      <button type="button" className="secondary-button" onClick={() => void captureScreenshot()}>
+        Capture screenshot
       </button>
     </main>
   );

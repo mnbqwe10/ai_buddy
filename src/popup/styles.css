@@ -69,6 +69,11 @@ button {
   border-color: #2563eb;
 }
 
+.secondary-button {
+  background: #0d9488;
+  border-color: #0d9488;
+}
+
 .toolbar-toggle {
   display: flex;
   align-items: center;

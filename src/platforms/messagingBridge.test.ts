@@ -1,6 +1,19 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { injectPrompt } from "./messagingBridge";
+import type { PromptAttachment } from "../shared/messages";
+
+function imageAttachment(): PromptAttachment {
+  return {
+    id: "image-1",
+    kind: "image",
+    mimeType: "image/png",
+    fileName: "capture.png",
+    dataUrl: "data:image/png;base64,AA==",
+    width: 1,
+    height: 1,
+  };
+}
 
 function markVisible(element: HTMLElement) {
   element.getBoundingClientRect = () => ({
@@ -67,6 +80,7 @@ describe("messaging bridge", () => {
   afterEach(() => {
     document.body.innerHTML = "";
     Reflect.deleteProperty(document, "execCommand");
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -402,5 +416,25 @@ describe("messaging bridge", () => {
     expect(result).toEqual({ ok: true, mode: "sent" });
     expect(composer.textContent).toBe("Send this to Discord");
     expect(enterEvents).toEqual(["keydown:Enter", "keypress:Enter", "keyup:Enter"]);
+  });
+
+  it("keeps image prompts drafted when attachment requires manual clipboard fallback", async () => {
+    const composer = document.createElement("div");
+    composer.setAttribute("role", "textbox");
+    composer.setAttribute("contenteditable", "true");
+    markVisible(composer);
+
+    const sendButton = document.createElement("button");
+    sendButton.setAttribute("title", "Send Message");
+    markVisible(sendButton);
+    const clickSend = vi.fn();
+    sendButton.addEventListener("click", clickSend);
+    document.body.append(composer, sendButton);
+
+    const result = await injectPrompt("Review the screenshot", true, [imageAttachment()]);
+
+    expect(result).toEqual({ ok: true, mode: "drafted", attachmentDelivery: "manualClipboard" });
+    expect(composer.textContent).toBe("Review the screenshot");
+    expect(clickSend).not.toHaveBeenCalled();
   });
 });

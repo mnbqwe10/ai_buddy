@@ -11,6 +11,23 @@ function prompt(id = "explain"): PendingPrompt {
   };
 }
 
+function screenshotPrompt(): PendingPrompt {
+  return {
+    ...prompt("screenshot"),
+    attachments: [
+      {
+        id: "image-1",
+        kind: "image",
+        mimeType: "image/png",
+        fileName: "capture.png",
+        dataUrl: "data:image/png;base64,abc",
+        width: 10,
+        height: 12,
+      },
+    ],
+  };
+}
+
 function port(postMessage: PromptPort["postMessage"] = vi.fn()): PromptPort {
   return {
     name: sidePanelPortName,
@@ -40,6 +57,16 @@ describe("background prompt router", () => {
     expect(router.deliverPrompt(nextPrompt)).toBe(true);
     expect(postMessage).toHaveBeenCalledWith({ type: "deliver-prompt", prompt: nextPrompt });
     expect(router.claimPendingPrompt()).toBeNull();
+  });
+
+  it("preserves screenshot attachments while routing prompts", () => {
+    const router = createPromptRouter();
+    const postMessage = vi.fn();
+    router.connect(port(postMessage));
+    const nextPrompt = screenshotPrompt();
+
+    expect(router.deliverPrompt(nextPrompt)).toBe(true);
+    expect(postMessage).toHaveBeenCalledWith({ type: "deliver-prompt", prompt: nextPrompt });
   });
 
   it("falls back to pending when connected ports cannot receive messages", () => {

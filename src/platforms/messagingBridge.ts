@@ -1,3 +1,6 @@
+import { deliverImageAttachments, waitForImageAttachmentUpload, type AttachmentDelivery } from "./attachments";
+import type { PromptAttachment } from "../shared/messages";
+
 const bridgeSource = "ai-buddy-messaging-bridge";
 
 interface BridgeMessage {
@@ -5,10 +8,13 @@ interface BridgeMessage {
   type?: string;
   requestId?: string;
   promptText?: string;
+  attachments?: PromptAttachment[];
   submit?: boolean;
 }
 
-type BridgeResult = { ok: true; mode: "sent" | "drafted" } | { ok: false; error: string };
+type BridgeResult =
+  | { ok: true; mode: "sent" | "drafted"; attachmentDelivery?: AttachmentDelivery }
+  | { ok: false; error: string };
 
 const sendButtonWaitMs = 3_000;
 const sendButtonDiscoveryWaitMs = 250;
@@ -542,21 +548,34 @@ async function submitComposer(
   return true;
 }
 
-export async function injectPrompt(promptText: string, submit: boolean): Promise<BridgeResult> {
-  const composer = findComposer();
+export async function injectPrompt(
+  promptText: string,
+  submit: boolean,
+  attachments?: PromptAttachment[],
+): Promise<BridgeResult> {
+  let composer = findComposer();
   if (!composer) {
     return { ok: false, error: "Messaging composer not found" };
   }
+
+  const attachmentDelivery = await deliverImageAttachments(composer, attachments);
+  await waitForImageAttachmentUpload(attachmentDelivery);
+  composer = findComposer() ?? composer;
 
   if (!(await setComposerText(composer, promptText))) {
     return { ok: false, error: "Unable to draft message" };
   }
 
-  if (submit && !(await submitComposer(composer, promptText))) {
+  const shouldSubmit = submit && attachmentDelivery !== "manualClipboard";
+  if (shouldSubmit && !(await submitComposer(composer, promptText))) {
     return { ok: false, error: "Message drafted, but the chat platform did not accept the send action." };
   }
 
-  return { ok: true, mode: submit ? "sent" : "drafted" };
+  return {
+    ok: true,
+    mode: shouldSubmit ? "sent" : "drafted",
+    ...(attachmentDelivery ? { attachmentDelivery } : {}),
+  };
 }
 
 async function handleBridgeMessage(event: MessageEvent) {
@@ -577,7 +596,7 @@ async function handleBridgeMessage(event: MessageEvent) {
     return;
   }
 
-  const result = await injectPrompt(message.promptText, Boolean(message.submit));
+  const result = await injectPrompt(message.promptText, Boolean(message.submit), message.attachments);
   sourceWindow?.postMessage(
     {
       source: bridgeSource,

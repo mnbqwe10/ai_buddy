@@ -9,10 +9,12 @@
   "permissions": [
     "storage",
     "sidePanel",
+    "clipboardWrite",
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
+    "<all_urls>",
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
     "https://claude.ai/*",

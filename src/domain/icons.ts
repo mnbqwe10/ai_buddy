@@ -61,6 +61,12 @@ export const fallbackActionIcons: ActionIconDefinition[] = [
     svg: '<rect x="4" y="5" width="7" height="7" rx="1"/><circle cx="17" cy="9" r="3"/><path d="m6 20 4-5 4 5 3-4 3 4z"/>',
   },
   {
+    id: "camera",
+    name: "Camera",
+    keywords: ["screenshot", "capture", "image"],
+    svg: '<path d="M14.5 5 13 3H9L7.5 5H4v16h16V5z"/><circle cx="12" cy="13" r="4"/>',
+  },
+  {
     id: "tag",
     name: "Tag",
     keywords: ["name", "label", "title"],

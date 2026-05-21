@@ -1,3 +1,6 @@
+import { deliverImageAttachments, waitForImageAttachmentUpload, type AttachmentDelivery } from "./attachments";
+import type { PromptAttachment } from "../shared/messages";
+
 const bridgeSource = "ai-buddy-copilot-bridge";
 
 interface BridgeMessage {
@@ -5,10 +8,13 @@ interface BridgeMessage {
   type?: string;
   requestId?: string;
   promptText?: string;
+  attachments?: PromptAttachment[];
   submit?: boolean;
 }
 
-type BridgeResult = { ok: true; mode: "sent" | "drafted" } | { ok: false; error: string };
+type BridgeResult =
+  | { ok: true; mode: "sent" | "drafted"; attachmentDelivery?: AttachmentDelivery }
+  | { ok: false; error: string };
 
 const retryDelayMs = 250;
 const maxInjectAttempts = 20;
@@ -157,28 +163,45 @@ function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputE
   return dispatchEnter(composer);
 }
 
-export async function injectPrompt(promptText: string, submit: boolean): Promise<BridgeResult> {
-  const composer = findComposer();
+export async function injectPrompt(
+  promptText: string,
+  submit: boolean,
+  attachments?: PromptAttachment[],
+): Promise<BridgeResult> {
+  let composer = findComposer();
   if (!composer) {
     return { ok: false, error: "Copilot composer not found" };
   }
+
+  const attachmentDelivery = await deliverImageAttachments(composer, attachments);
+  await waitForImageAttachmentUpload(attachmentDelivery);
+  composer = findComposer() ?? composer;
 
   if (!setComposerText(composer, promptText)) {
     return { ok: false, error: "Unable to populate Copilot composer" };
   }
 
-  if (submit && !submitComposer(composer)) {
+  const shouldSubmit = submit && attachmentDelivery !== "manualClipboard";
+  if (shouldSubmit && !submitComposer(composer)) {
     return { ok: false, error: "Unable to submit Copilot prompt" };
   }
 
-  return { ok: true, mode: submit ? "sent" : "drafted" };
+  return {
+    ok: true,
+    mode: shouldSubmit ? "sent" : "drafted",
+    ...(attachmentDelivery ? { attachmentDelivery } : {}),
+  };
 }
 
-async function injectPromptWithRetry(promptText: string, submit: boolean): Promise<BridgeResult> {
-  let result = await injectPrompt(promptText, submit);
+async function injectPromptWithRetry(
+  promptText: string,
+  submit: boolean,
+  attachments?: PromptAttachment[],
+): Promise<BridgeResult> {
+  let result = await injectPrompt(promptText, submit, attachments);
   for (let attempt = 1; !result.ok && attempt < maxInjectAttempts; attempt += 1) {
     await delay(retryDelayMs);
-    result = await injectPrompt(promptText, submit);
+    result = await injectPrompt(promptText, submit, attachments);
   }
 
   return result;
@@ -202,7 +225,7 @@ async function handleBridgeMessage(event: MessageEvent) {
     return;
   }
 
-  const result = await injectPromptWithRetry(message.promptText, Boolean(message.submit));
+  const result = await injectPromptWithRetry(message.promptText, Boolean(message.submit), message.attachments);
   sourceWindow?.postMessage(
     {
       source: bridgeSource,

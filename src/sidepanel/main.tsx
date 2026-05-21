@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { createDefaultAppState } from "../domain/defaults";
 import { resolveSendMode } from "../domain/sendPolicy";
 import { sidePanelPortName } from "../background/promptRouter";
-import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
+import type { PendingPrompt, PromptAttachment, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
 import { useAppState } from "../shared/useAppState";
 import { bridgeSourceForPlatform } from "./platformBridge";
@@ -21,10 +21,29 @@ function isDeliverPromptMessage(message: unknown): message is Extract<RuntimeMes
   );
 }
 
+async function dataUrlToBlob(dataUrl: string) {
+  return fetch(dataUrl).then((response) => response.blob());
+}
+
+async function copyImageAttachmentToClipboard(attachments: PromptAttachment[] | undefined) {
+  const image = attachments?.find((attachment) => attachment.kind === "image");
+  if (!image || typeof ClipboardItem !== "function") {
+    return false;
+  }
+
+  await navigator.clipboard.write([
+    new ClipboardItem({
+      [image.mimeType]: await dataUrlToBlob(image.dataUrl),
+    }),
+  ]);
+  return true;
+}
+
 function SidePanelApp() {
   const { state, isLoading, setSettings } = useAppState();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const requestCounterRef = useRef(0);
+  const inflightPromptsRef = useRef(new Map<string, PendingPrompt>());
   const [status, setStatus] = useState("Side panel shell ready.");
   const [isIframeReady, setIsIframeReady] = useState(false);
   const [isBridgeReady, setIsBridgeReady] = useState(false);
@@ -128,7 +147,7 @@ function SidePanelApp() {
   }, [canUseBridge, isBridgeReady, isIframeReady, pingBridge]);
 
   useEffect(() => {
-    function handleBridgeMessage(event: MessageEvent) {
+    async function handleBridgeMessage(event: MessageEvent) {
       if (!iframeRef.current || event.source !== iframeRef.current.contentWindow) {
         return;
       }
@@ -145,7 +164,25 @@ function SidePanelApp() {
       }
 
       if (message.type === "inject-result") {
+        const requestId = typeof message.requestId === "string" ? message.requestId : "";
+        const requestPrompt = inflightPromptsRef.current.get(requestId);
+        inflightPromptsRef.current.delete(requestId);
+
         if (message.result?.ok) {
+          if (message.result.attachmentDelivery === "manualClipboard") {
+            try {
+              const copied = await copyImageAttachmentToClipboard(requestPrompt?.attachments);
+              setStatus(
+                copied
+                  ? "Prompt drafted. Screenshot copied; paste it into the chat."
+                  : "Prompt drafted. Screenshot attachment needs manual upload.",
+              );
+            } catch {
+              setStatus("Prompt drafted. Screenshot attachment needs manual upload.");
+            }
+            return;
+          }
+
           setStatus(message.result.mode === "drafted" ? "Prompt drafted." : "Prompt sent.");
         } else {
           setStatus(message.result?.error ?? "Prompt delivery failed.");
@@ -153,8 +190,12 @@ function SidePanelApp() {
       }
     }
 
-    window.addEventListener("message", handleBridgeMessage);
-    return () => window.removeEventListener("message", handleBridgeMessage);
+    const listener = (event: MessageEvent) => {
+      void handleBridgeMessage(event);
+    };
+
+    window.addEventListener("message", listener);
+    return () => window.removeEventListener("message", listener);
   }, [activePlatform.name, bridgeSource]);
 
   useEffect(() => {
@@ -164,6 +205,7 @@ function SidePanelApp() {
 
     const requestId = `prompt-${Date.now()}-${requestCounterRef.current++}`;
     setStatus(sendMode === "draftOnly" ? "Drafting prompt..." : "Sending prompt...");
+    inflightPromptsRef.current.set(requestId, pendingPrompt);
 
     iframeRef.current.contentWindow.postMessage(
       {
@@ -171,6 +213,7 @@ function SidePanelApp() {
         type: "inject-prompt",
         requestId,
         promptText: pendingPrompt.promptText,
+        attachments: pendingPrompt.attachments,
         submit: sendMode === "autoSubmit",
       },
       platformMessageOrigin,

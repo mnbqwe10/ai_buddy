@@ -3,7 +3,7 @@ import { getFallbackActionIcon } from "../domain/icons";
 import { isLongSelection, longSelectionCharacterLimit, renderPrompt } from "../domain/prompt";
 import { normalizeAppState } from "../domain/state";
 import { getActiveScenario, getToolbarActions } from "../domain/toolbar";
-import type { RuntimeMessage } from "../shared/messages";
+import type { PromptAttachment, RuntimeMessage, ScreenshotCaptureRegion } from "../shared/messages";
 import { appStateKey, getAppState, saveAppState } from "../shared/storage";
 import {
   createContentScriptErrorHandler,
@@ -14,17 +14,29 @@ import { shouldPreventToolbarMouseDown, targetIsNativeToolbarControl } from "./t
 
 const rootId = "ai-buddy-toolbar-root";
 const styleId = "ai-buddy-toolbar-style";
+const screenshotOverlayId = "ai-buddy-screenshot-overlay";
 const directActionLimit = 5;
+const minimumVisibleActionCount = 0;
+const screenshotActionId = "screenshot";
+const minimumScreenshotRegionSize = 8;
+const screenshotContextText = "See attached screenshot.";
+const screenshotButtonColor = "#0D9488";
+
+type PromptContextKind = "text" | "screenshot";
 
 let appState: AppState | null = null;
 let toolbarRoot: HTMLDivElement | null = null;
 let lastSelectionText = "";
 let lastSelectionRect: DOMRect | null = null;
+let lastPromptAttachments: PromptAttachment[] = [];
+let pendingScreenshotRegion: ScreenshotCaptureRegion | null = null;
+let activeContextKind: PromptContextKind = "text";
 let selectionUpdateTimer: number | null = null;
 let isPointerSelecting = false;
 let isToolbarInteracting = false;
 let extensionContextIsInvalidated = false;
 let activeInputPromptAction: Action | null = null;
+let pendingScreenshotCancelHandler: ((event: KeyboardEvent) => void) | null = null;
 
 function removeExistingToolbarDom() {
   document.getElementById(rootId)?.remove();
@@ -72,7 +84,7 @@ function injectStyles() {
       gap: 6px;
       max-width: 100%;
       padding: 7px;
-      overflow-x: auto;
+      overflow: visible;
     }
 
     #${rootId} select,
@@ -150,7 +162,9 @@ function injectStyles() {
       right: 0;
       top: calc(100% + 6px);
       display: none;
+      z-index: 1;
       min-width: 150px;
+      max-width: min(240px, calc(100vw - 24px));
       border: 1px solid #d8deea;
       border-radius: 8px;
       padding: 6px;
@@ -199,6 +213,32 @@ function injectStyles() {
       background: #ffffff;
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--ai-buddy-scenario-color, #2563eb) 18%, transparent);
     }
+
+    #${screenshotOverlayId} {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483646;
+      cursor: crosshair;
+      user-select: none;
+      background: rgba(15, 23, 42, 0.18);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #${screenshotOverlayId}[data-pending="true"] {
+      pointer-events: none;
+      cursor: default;
+    }
+
+    #${screenshotOverlayId} .ai-buddy-screenshot-region {
+      position: fixed;
+      display: none;
+      box-sizing: border-box;
+      border: 2px solid #0d9488;
+      background: rgba(13, 148, 136, 0.14);
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.34);
+      pointer-events: none;
+    }
+
   `;
   document.documentElement.appendChild(style);
 }
@@ -250,7 +290,14 @@ function getSelectionInfo() {
 
 function positionToolbar(root: HTMLDivElement, rect: DOMRect) {
   const toolbarRect = root.getBoundingClientRect();
-  const top = Math.min(window.innerHeight - toolbarRect.height - 8, rect.bottom + 8);
+  const below = rect.bottom + 8;
+  const above = rect.top - toolbarRect.height - 8;
+  const top =
+    below + toolbarRect.height <= window.innerHeight - 8
+      ? below
+      : above >= 8
+        ? above
+        : Math.min(window.innerHeight - toolbarRect.height - 8, below);
   let left = rect.left + rect.width / 2 - toolbarRect.width / 2;
 
   left = Math.max(8, left);
@@ -265,12 +312,33 @@ function hideToolbar() {
     toolbarRoot.dataset.visible = "false";
     toolbarRoot.dataset.inputMode = "false";
   }
+  if (activeContextKind === "screenshot") {
+    removeScreenshotOverlay();
+    pendingScreenshotRegion = null;
+    lastPromptAttachments = [];
+    lastSelectionText = "";
+    lastSelectionRect = null;
+    activeContextKind = "text";
+  }
   activeInputPromptAction = null;
+}
+
+function clearPendingScreenshotCancelHandler() {
+  if (pendingScreenshotCancelHandler) {
+    document.removeEventListener("keydown", pendingScreenshotCancelHandler, true);
+    pendingScreenshotCancelHandler = null;
+  }
+}
+
+function removeScreenshotOverlay() {
+  clearPendingScreenshotCancelHandler();
+  document.getElementById(screenshotOverlayId)?.remove();
 }
 
 function destroyToolbar() {
   toolbarRoot?.remove();
   toolbarRoot = null;
+  removeScreenshotOverlay();
   removeExistingToolbarDom();
 }
 
@@ -286,6 +354,9 @@ function markExtensionContextInvalidated() {
   appState = null;
   lastSelectionText = "";
   lastSelectionRect = null;
+  lastPromptAttachments = [];
+  pendingScreenshotRegion = null;
+  activeContextKind = "text";
   clearSelectionUpdateTimer();
   destroyToolbar();
 }
@@ -311,6 +382,14 @@ function scheduleToolbarForCurrentSelection(delayMs = 80) {
 
 function eventTargetIsToolbar(target: EventTarget | null) {
   return Boolean(target instanceof Node && toolbarRoot?.contains(target));
+}
+
+function hideToolbarForPageScroll(event: Event) {
+  if (eventTargetIsToolbar(event.target)) {
+    return;
+  }
+
+  hideToolbar();
 }
 
 async function setActiveScenario(scenarioId: string) {
@@ -356,7 +435,7 @@ function hideInputPrompt(options: { clear?: boolean } = {}) {
 }
 
 function showInputPrompt(action: Action) {
-  if (!toolbarRoot || !lastSelectionText) {
+  if (!toolbarRoot || (!lastSelectionText && lastPromptAttachments.length === 0)) {
     return;
   }
 
@@ -385,20 +464,23 @@ function submitInputPrompt(userInput: string) {
     return;
   }
 
-  sendPromptAction(action, userInput);
+  void sendPromptAction(action, userInput).catch((error: unknown) => {
+    handleContentScriptError(error);
+    window.alert(error instanceof Error ? error.message : "Unable to send prompt.");
+  });
 }
 
-function sendPromptAction(action: Action, userInput?: string) {
+async function sendPromptAction(action: Action, userInput?: string) {
   if (extensionContextIsInvalidated) {
     hideToolbar();
     return;
   }
 
-  if (!appState || !lastSelectionText) {
+  if (!appState || (!lastSelectionText && lastPromptAttachments.length === 0)) {
     return;
   }
 
-  if (isLongSelection(lastSelectionText)) {
+  if (activeContextKind === "text" && isLongSelection(lastSelectionText)) {
     const shouldContinue = window.confirm(
       `The selected text is longer than ${longSelectionCharacterLimit.toLocaleString()} characters. It may be slow or rejected by the Chat Platform. Continue?`,
     );
@@ -406,6 +488,12 @@ function sendPromptAction(action: Action, userInput?: string) {
       hideToolbar();
       return;
     }
+  }
+
+  let attachments = lastPromptAttachments;
+  if (activeContextKind === "screenshot" && pendingScreenshotRegion) {
+    removeScreenshotOverlay();
+    attachments = [await requestScreenshotAttachment(pendingScreenshotRegion)];
   }
 
   const rendered = renderPrompt(
@@ -423,6 +511,7 @@ function sendPromptAction(action: Action, userInput?: string) {
     prompt: {
       ...rendered,
       createdAt: Date.now(),
+      ...(attachments.length > 0 ? { attachments } : {}),
     },
   };
   try {
@@ -432,7 +521,190 @@ function sendPromptAction(action: Action, userInput?: string) {
     handleContentScriptError(error);
     return;
   }
+  pendingScreenshotRegion = null;
+  lastPromptAttachments = attachments;
+  removeScreenshotOverlay();
   hideToolbar();
+}
+
+function normalizeViewportRect(startX: number, startY: number, endX: number, endY: number) {
+  const left = Math.min(startX, endX);
+  const top = Math.min(startY, endY);
+  const right = Math.max(startX, endX);
+  const bottom = Math.max(startY, endY);
+
+  return {
+    left,
+    top,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
+function screenshotRegionFromRect(rect: ReturnType<typeof normalizeViewportRect>): ScreenshotCaptureRegion {
+  return {
+    x: rect.left,
+    y: rect.top,
+    width: rect.width,
+    height: rect.height,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+  };
+}
+
+function waitForNextPaint() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve());
+    });
+  });
+}
+
+function isScreenshotCaptureResponse(response: unknown): response is { ok: true; attachment: PromptAttachment } {
+  return Boolean(
+    response &&
+      typeof response === "object" &&
+      "ok" in response &&
+      response.ok === true &&
+      "attachment" in response,
+  );
+}
+
+async function requestScreenshotAttachment(region: ScreenshotCaptureRegion): Promise<PromptAttachment> {
+  await waitForNextPaint();
+  const response = await chrome.runtime.sendMessage({
+    type: "capture-screenshot-region",
+    region,
+  } satisfies RuntimeMessage);
+
+  if (isScreenshotCaptureResponse(response)) {
+    return response.attachment;
+  }
+
+  const message =
+    response && typeof response === "object" && "error" in response
+      ? String(response.error)
+      : "Unable to capture screenshot.";
+  throw new Error(message);
+}
+
+function setPendingScreenshotContext(region: ScreenshotCaptureRegion, rect: ReturnType<typeof normalizeViewportRect>) {
+  lastSelectionText = screenshotContextText;
+  lastPromptAttachments = [];
+  pendingScreenshotRegion = region;
+  activeContextKind = "screenshot";
+  lastSelectionRect = new DOMRect(rect.left, rect.top, rect.width, rect.height);
+  clearPendingScreenshotCancelHandler();
+  pendingScreenshotCancelHandler = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      hideToolbar();
+    }
+  };
+  document.addEventListener("keydown", pendingScreenshotCancelHandler, true);
+  renderToolbar();
+}
+
+async function startScreenshotSelection() {
+  if (extensionContextIsInvalidated) {
+    return;
+  }
+
+  appState = await getAppState();
+  if (currentHostIsBlocked(appState)) {
+    return;
+  }
+
+  hideToolbar();
+  removeScreenshotOverlay();
+  injectStyles();
+
+  const overlay = document.createElement("div");
+  overlay.id = screenshotOverlayId;
+
+  const regionElement = document.createElement("div");
+  regionElement.className = "ai-buddy-screenshot-region";
+
+  overlay.append(regionElement);
+  document.documentElement.appendChild(overlay);
+
+  let startX = 0;
+  let startY = 0;
+  let currentRegion: ScreenshotCaptureRegion | null = null;
+  let currentRect: ReturnType<typeof normalizeViewportRect> | null = null;
+  let isSelectingRegion = false;
+
+  function updateRegion(endX: number, endY: number) {
+    const rect = normalizeViewportRect(startX, startY, endX, endY);
+    regionElement.style.display = "block";
+    regionElement.style.left = `${rect.left}px`;
+    regionElement.style.top = `${rect.top}px`;
+    regionElement.style.width = `${rect.width}px`;
+    regionElement.style.height = `${rect.height}px`;
+
+    if (rect.width >= minimumScreenshotRegionSize && rect.height >= minimumScreenshotRegionSize) {
+      currentRegion = screenshotRegionFromRect(rect);
+      currentRect = rect;
+    } else {
+      currentRegion = null;
+      currentRect = null;
+    }
+  }
+
+  function handlePointerDown(event: PointerEvent) {
+    if (event.target !== overlay && event.target !== regionElement) {
+      return;
+    }
+
+    event.preventDefault();
+    overlay.setPointerCapture(event.pointerId);
+    startX = event.clientX;
+    startY = event.clientY;
+    isSelectingRegion = true;
+    currentRegion = null;
+    updateRegion(event.clientX, event.clientY);
+  }
+
+  function handlePointerMove(event: PointerEvent) {
+    if (!isSelectingRegion) {
+      return;
+    }
+
+    event.preventDefault();
+    updateRegion(event.clientX, event.clientY);
+  }
+
+  function handlePointerUp(event: PointerEvent) {
+    if (!isSelectingRegion) {
+      return;
+    }
+
+    event.preventDefault();
+    isSelectingRegion = false;
+    overlay.releasePointerCapture(event.pointerId);
+    updateRegion(event.clientX, event.clientY);
+
+    if (!currentRegion || !currentRect) {
+      regionElement.style.display = "none";
+      return;
+    }
+
+    document.removeEventListener("keydown", handleKeyDown, true);
+    overlay.dataset.pending = "true";
+    setPendingScreenshotContext(currentRegion, currentRect);
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      removeScreenshotOverlay();
+      document.removeEventListener("keydown", handleKeyDown, true);
+    }
+  }
+
+  overlay.addEventListener("pointerdown", handlePointerDown);
+  overlay.addEventListener("pointermove", handlePointerMove);
+  overlay.addEventListener("pointerup", handlePointerUp);
+  document.addEventListener("keydown", handleKeyDown, true);
 }
 
 function handleAction(action: Action) {
@@ -451,7 +723,10 @@ function handleAction(action: Action) {
     return;
   }
 
-  sendPromptAction(action);
+  void sendPromptAction(action).catch((error: unknown) => {
+    handleContentScriptError(error);
+    window.alert(error instanceof Error ? error.message : "Unable to send screenshot prompt.");
+  });
 }
 
 function actionButton(action: Action, buttonStyle: AppState["settings"]["actionButtonStyle"]) {
@@ -487,6 +762,39 @@ function actionButton(action: Action, buttonStyle: AppState["settings"]["actionB
   return button;
 }
 
+function screenshotButton(buttonStyle: AppState["settings"]["actionButtonStyle"]) {
+  const action: Action = {
+    id: screenshotActionId,
+    name: "Screenshot",
+    type: "local",
+    icon: "camera",
+    color: screenshotButtonColor,
+  };
+  const button = actionButton(action, buttonStyle);
+  button.addEventListener("click", (event) => {
+    event.stopImmediatePropagation();
+    void startScreenshotSelection().catch(handleContentScriptError);
+  }, true);
+  return button;
+}
+
+function createMoreMenu(actions: Action[], buttonStyle: AppState["settings"]["actionButtonStyle"]) {
+  const more = document.createElement("div");
+  more.className = "ai-buddy-more";
+
+  const moreButton = document.createElement("button");
+  moreButton.type = "button";
+  moreButton.textContent = "More";
+  more.appendChild(moreButton);
+
+  const menu = document.createElement("div");
+  menu.className = "ai-buddy-menu";
+  actions.forEach((action) => menu.appendChild(actionButton(action, buttonStyle)));
+  more.appendChild(menu);
+
+  return more;
+}
+
 function renderToolbar() {
   if (extensionContextIsInvalidated || !appState || !lastSelectionRect) {
     return;
@@ -496,6 +804,11 @@ function renderToolbar() {
   const scenario = getActiveScenario(appState);
   const { directActions, overflowActions } = getToolbarActions(appState, scenario, directActionLimit);
   const buttonStyle = appState.settings.actionButtonStyle;
+  const actionIsAvailableForContext = (action: Action) =>
+    action.id !== screenshotActionId && (activeContextKind === "text" || action.type !== "local");
+  const availableActions = [...directActions, ...overflowActions].filter(actionIsAvailableForContext);
+  let visibleDirectActions = availableActions.slice(0, directActionLimit);
+  let visibleOverflowActions = availableActions.slice(directActionLimit);
 
   root.style.setProperty("--ai-buddy-scenario-color", scenario.color);
   root.replaceChildren();
@@ -516,24 +829,23 @@ function renderToolbar() {
     void setActiveScenario(scenarioSelect.value).catch(handleContentScriptError);
   });
   inner.appendChild(scenarioSelect);
+  inner.appendChild(screenshotButton(buttonStyle));
 
-  directActions.forEach((action) => inner.appendChild(actionButton(action, buttonStyle)));
-
-  if (overflowActions.length > 0) {
-    const more = document.createElement("div");
-    more.className = "ai-buddy-more";
-
-    const moreButton = document.createElement("button");
-    moreButton.type = "button";
-    moreButton.textContent = "More";
-    more.appendChild(moreButton);
-
-    const menu = document.createElement("div");
-    menu.className = "ai-buddy-menu";
-    overflowActions.forEach((action) => menu.appendChild(actionButton(action, buttonStyle)));
-    more.appendChild(menu);
-    inner.appendChild(more);
+  function renderActionRow() {
+    Array.from(inner.querySelectorAll(".ai-buddy-context-action,.ai-buddy-more")).forEach((element) => {
+      element.remove();
+    });
+    visibleDirectActions.forEach((action) => {
+      const button = actionButton(action, buttonStyle);
+      button.classList.add("ai-buddy-context-action");
+      inner.appendChild(button);
+    });
+    if (visibleOverflowActions.length > 0) {
+      inner.appendChild(createMoreMenu(visibleOverflowActions, buttonStyle));
+    }
   }
+
+  renderActionRow();
 
   const inputPromptForm = createInputPromptForm({
     onSubmit: submitInputPrompt,
@@ -544,6 +856,16 @@ function renderToolbar() {
   root.dataset.visible = "true";
   root.dataset.inputMode = "false";
   positionToolbar(root, lastSelectionRect);
+
+  while (inner.scrollWidth > inner.clientWidth && visibleDirectActions.length > minimumVisibleActionCount) {
+    const movedAction = visibleDirectActions.pop();
+    if (!movedAction) {
+      break;
+    }
+    visibleOverflowActions = [movedAction, ...visibleOverflowActions];
+    renderActionRow();
+    positionToolbar(root, lastSelectionRect);
+  }
 }
 
 async function showToolbarForCurrentSelection() {
@@ -566,8 +888,17 @@ async function showToolbarForCurrentSelection() {
 
   lastSelectionText = selectionInfo.text;
   lastSelectionRect = selectionInfo.rect;
+  lastPromptAttachments = [];
+  pendingScreenshotRegion = null;
+  activeContextKind = "text";
   renderToolbar();
 }
+
+chrome.runtime.onMessage.addListener((message: RuntimeMessage) => {
+  if (message?.type === "start-screenshot-capture") {
+    void startScreenshotSelection().catch(handleContentScriptError);
+  }
+});
 
 document.addEventListener("mousedown", (event) => {
   if (eventTargetIsToolbar(event.target)) {
@@ -623,7 +954,7 @@ document.addEventListener("keyup", (event) => {
   scheduleToolbarForCurrentSelection(80);
 });
 
-document.addEventListener("scroll", hideToolbar, true);
+document.addEventListener("scroll", hideToolbarForPageScroll, true);
 window.addEventListener("resize", hideToolbar);
 window.addEventListener("unhandledrejection", (event) => {
   handleExtensionContextUnhandledRejection(event, handleContentScriptError);
