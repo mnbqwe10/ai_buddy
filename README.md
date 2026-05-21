@@ -10,6 +10,13 @@ Tired of copying page text, switching tabs, and pasting the same context into yo
 
 AI Buddy is a Chrome extension that adds a selection toolbar for sending selected page text to an AI chat platform. It opens the platform in Chrome's side panel and uses reusable scenario actions such as Explain, Translate, Summarize, Draft Reply, Polish, Brainstorm, and Visualize.
 
+## What's New in v1.1.0
+
+- Improved screenshot prompt delivery for Claude, DeepSeek, and WhatsApp Web.
+- Claude now waits for its upload surface before attaching screenshots and avoids sending text alone if an upload fails.
+- DeepSeek now waits longer for slow image uploads and targets its enabled send control more reliably.
+- WhatsApp Web now uses the media caption flow so screenshots and prompt text are sent together.
+
 ## Important Notes
 
 - AI Buddy is a personal project. It is not affiliated with, endorsed by, sponsored by, or maintained by any AI chat platform or messaging platform.
