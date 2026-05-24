@@ -11,6 +11,7 @@ import {
   handleExtensionContextUnhandledRejection,
 } from "./extensionContext";
 import { createInputPromptForm, focusInputPromptForm, setInputPromptFormVisible } from "./inputPromptForm";
+import { annotateScreenshotAttachment } from "./screenshotAnnotation";
 import { shouldPreventToolbarMouseDown, targetIsNativeToolbarControl } from "./toolbarEvents";
 
 const rootId = "ai-buddy-toolbar-root";
@@ -494,7 +495,8 @@ async function sendPromptAction(action: Action, userInput?: string) {
   let attachments = lastPromptAttachments;
   if (activeContextKind === "screenshot" && pendingScreenshotRegion) {
     removeScreenshotOverlay();
-    attachments = [await requestScreenshotAttachment(pendingScreenshotRegion)];
+    const screenshotAttachment = await requestScreenshotAttachment(pendingScreenshotRegion);
+    attachments = [await annotateScreenshotAttachment(screenshotAttachment)];
   }
 
   const rendered = renderPrompt(
