@@ -32,12 +32,6 @@ chrome.commands.onCommand.addListener((command) => {
     openSidePanel({ windowId: chrome.windows.WINDOW_ID_CURRENT });
   }
 
-  if (command === "open-toolbar") {
-    void sendMessageToActiveTab({ type: "open-toolbar-for-selection" }).catch((error) => {
-      console.warn("[AI Buddy] Unable to open toolbar", error);
-    });
-  }
-
   if (command === "capture-screenshot") {
     void sendMessageToActiveTab({ type: "start-screenshot-capture" }).catch((error) => {
       console.warn("[AI Buddy] Unable to start screenshot capture", error);

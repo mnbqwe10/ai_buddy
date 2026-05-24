@@ -24,12 +24,13 @@ interface ShortcutCommand {
 }
 
 const shortcutLabels: Record<string, string> = {
-  "open-toolbar": "Open Toolbar",
-  "capture-screenshot": "Screenshot",
   "toggle-toolbar-enabled": "Enable or Disable Toolbar",
   "toggle-sidebar": "Open Side Panel",
+  "capture-screenshot": "Screenshot",
   "cycle-scenario": "Cycle Scenario",
 };
+
+const shortcutOrder = Object.keys(shortcutLabels);
 
 interface ActionDraft {
   id: string;
@@ -284,6 +285,25 @@ function PromptTemplateHelp({ action }: { action: Action }) {
       ))}
       <span>Page URL is not included.</span>
     </div>
+  );
+}
+
+function KeyboardShortcut({ shortcut }: { shortcut: string | undefined }) {
+  if (!shortcut) {
+    return <span className="shortcut-unassigned">Not assigned</span>;
+  }
+
+  const keys = shortcut.split("+").filter(Boolean);
+
+  return (
+    <span className="shortcut-keys">
+      {keys.map((key, index) => (
+        <span className="shortcut-key-part" key={`${key}-${index}`}>
+          {index > 0 && <span className="shortcut-plus">+</span>}
+          <kbd>{key}</kbd>
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -692,27 +712,6 @@ function OptionsApp() {
           />
           <small>Included at the beginning of every prompt. Keep it short and preference-focused.</small>
         </label>
-        <div className="shortcut-editor">
-          <div className="shortcut-editor-header">
-            <div>
-              <h3>Keyboard Shortcuts</h3>
-              <small>Chrome manages shortcut editing.</small>
-            </div>
-            <button type="button" className="secondary-button" onClick={openShortcutSettings}>
-              Edit shortcuts
-            </button>
-          </div>
-          <div className="shortcut-list">
-            {shortcutCommands
-              .filter((command) => command.name && shortcutLabels[command.name])
-              .map((command) => (
-                <div className="shortcut-row" key={command.name}>
-                  <span>{shortcutLabels[command.name!]}</span>
-                  <kbd>{command.shortcut || "Not assigned"}</kbd>
-                </div>
-              ))}
-          </div>
-        </div>
         <div className="pinned-actions-editor">
           <div>
             <h3>Pinned Actions</h3>
@@ -1017,6 +1016,29 @@ function OptionsApp() {
               <p className="active-note">No Action selected.</p>
             )}
           </article>
+        </div>
+      </section>
+
+      <section className="panel shortcut-editor">
+        <div className="shortcut-editor-header">
+          <div>
+            <h2>Keyboard Shortcuts</h2>
+            <p>Chrome manages shortcut editing.</p>
+          </div>
+          <button type="button" className="secondary-button" onClick={openShortcutSettings}>
+            Edit shortcuts
+          </button>
+        </div>
+        <div className="shortcut-list">
+          {shortcutOrder.map((commandName) => {
+            const command = shortcutCommands.find((item) => item.name === commandName);
+            return (
+              <div className="shortcut-row" key={commandName}>
+                <span>{shortcutLabels[commandName]}</span>
+                <KeyboardShortcut shortcut={command?.shortcut} />
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>

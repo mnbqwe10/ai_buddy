@@ -926,10 +926,6 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage) => {
   if (message?.type === "start-screenshot-capture") {
     void startScreenshotSelection().catch(handleContentScriptError);
   }
-
-  if (message?.type === "open-toolbar-for-selection") {
-    void showToolbarForCurrentSelection().catch(handleContentScriptError);
-  }
 });
 
 document.addEventListener("mousedown", (event) => {
