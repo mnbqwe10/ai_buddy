@@ -150,6 +150,34 @@ describe("prompt rendering", () => {
     expect(visualPrompt).toContain("generation prompt");
     expect(namingPrompt).toContain("compare them and recommend the best fit");
   });
+
+  it("renders Transform Actions for common output formats", () => {
+    const state = createDefaultAppState();
+    const mermaid = state.actions.find((action) => action.id === "transformMermaid")!;
+    const checklist = state.actions.find((action) => action.id === "transformChecklist")!;
+
+    const mermaidPrompt = renderPrompt(
+      mermaid,
+      {
+        selectedText: "User logs in, submits expenses, manager approves.",
+        pageTitle: "Workflow notes",
+      },
+      state.settings,
+    ).promptText;
+    const checklistPrompt = renderPrompt(
+      checklist,
+      {
+        selectedText: "Review request, approve budget, notify finance.",
+        pageTitle: "Launch plan",
+      },
+      state.settings,
+    ).promptText;
+
+    expect(mermaidPrompt).toContain("Mermaid diagram");
+    expect(mermaidPrompt).toContain("User logs in");
+    expect(checklistPrompt).toContain("actionable checklist");
+    expect(checklistPrompt).toContain("Review request");
+  });
 });
 
 describe("send policy", () => {

@@ -7,6 +7,7 @@ import {
   defaultScenarioId,
   defaultScenarios,
   defaultTranslationTargetLanguage,
+  transformActionIds,
 } from "./defaults";
 import {
   completeOnboarding,
@@ -72,6 +73,7 @@ describe("starter defaults", () => {
     expect(defaultScenarios.flatMap((scenario) => scenario.actionIds)).toEqual(
       expect.arrayContaining(["researchBrief", "debugCode", "supportReply", "analyzeData", "actionPlan"]),
     );
+    expect(defaultActions.map((action) => action.id)).toEqual(expect.arrayContaining(transformActionIds));
     expect(
       defaultScenarios.flatMap((scenario) =>
         scenario.actionIds.filter((actionId) => !actionIds.has(actionId)),

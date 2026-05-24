@@ -8,6 +8,16 @@ export const defaultPlatformName = "ChatGPT";
 export const defaultTranslationTargetLanguage = "English";
 export const defaultGlobalSystemPrompt =
   "Respond in English. Use a concise, friendly tone. Be clear, practical, and avoid inventing facts.";
+export const transformActionIds = [
+  "transformTweet",
+  "transformTable",
+  "transformMindMap",
+  "transformMermaid",
+  "transformChecklist",
+  "transformQuiz",
+  "transformFlashcards",
+  "transformUserStory",
+];
 
 export const defaultActions: Action[] = [
   {
@@ -339,6 +349,86 @@ export const defaultActions: Action[] = [
     color: "#CA8A04",
     instruction:
       "Prioritize the items in the selected text. Group them into Now, Next, and Later, explain the reasoning briefly, and call out anything blocked or missing.\n\nItems:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformTweet",
+    name: "Tweet",
+    type: "prompt",
+    icon: "message",
+    color: "#0D9488",
+    instruction:
+      "Transform the selected text into a concise social post suitable for X/Twitter. Include one strong hook, a clear body, and an optional short call to action. Keep it under 280 characters unless the content needs a thread.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformTable",
+    name: "Table",
+    type: "prompt",
+    icon: "table",
+    color: "#0891B2",
+    instruction:
+      "Transform the selected text into a clean Markdown table. Choose useful column names, preserve important values, and add a brief note for assumptions or missing data.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformMindMap",
+    name: "Mind Map",
+    type: "prompt",
+    icon: "chart-dots",
+    color: "#7C3AED",
+    instruction:
+      "Transform the selected text into a mind map. Use a concise hierarchical outline with a central topic, major branches, and short supporting nodes.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformMermaid",
+    name: "Mermaid",
+    type: "prompt",
+    icon: "chart-dots",
+    color: "#9333EA",
+    instruction:
+      "Transform the selected text into the most appropriate Mermaid diagram. Return only a fenced Mermaid code block plus a one-sentence note explaining the diagram type.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformChecklist",
+    name: "Checklist",
+    type: "prompt",
+    icon: "list-check",
+    color: "#059669",
+    instruction:
+      "Transform the selected text into an actionable checklist. Group related tasks, use checkbox Markdown, and include only tasks supported by the text.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformQuiz",
+    name: "Quiz",
+    type: "prompt",
+    icon: "question-mark",
+    color: "#EA580C",
+    instruction:
+      "Transform the selected text into a short quiz. Include 5 questions, answer choices when useful, and an answer key with brief explanations.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformFlashcards",
+    name: "Flashcards",
+    type: "prompt",
+    icon: "notes",
+    color: "#4F46E5",
+    instruction:
+      "Transform the selected text into flashcards. Use a two-column Markdown table with Front and Back columns, focusing on important terms, facts, and relationships.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "transformUserStory",
+    name: "User Story",
+    type: "prompt",
+    icon: "user-question",
+    color: "#BE123C",
+    instruction:
+      "Transform the selected text into product user stories. Use the format: As a <actor>, I want <feature>, so that <benefit>. Add acceptance criteria when the text supports them.\n\nText:\n\"{{selected_text}}\"",
     isBuiltIn: true,
   },
 ];

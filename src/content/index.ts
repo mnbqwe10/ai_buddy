@@ -1,4 +1,5 @@
 import type { Action, AppState } from "../domain/model";
+import { transformActionIds } from "../domain/defaults";
 import { getFallbackActionIcon } from "../domain/icons";
 import { isLongSelection, longSelectionCharacterLimit, renderPrompt } from "../domain/prompt";
 import { normalizeAppState } from "../domain/state";
@@ -778,13 +779,18 @@ function screenshotButton(buttonStyle: AppState["settings"]["actionButtonStyle"]
   return button;
 }
 
-function createMoreMenu(actions: Action[], buttonStyle: AppState["settings"]["actionButtonStyle"]) {
+function createMoreMenu(
+  actions: Action[],
+  buttonStyle: AppState["settings"]["actionButtonStyle"],
+  label = "More",
+  className = "",
+) {
   const more = document.createElement("div");
-  more.className = "ai-buddy-more";
+  more.className = `ai-buddy-more ${className}`.trim();
 
   const moreButton = document.createElement("button");
   moreButton.type = "button";
-  moreButton.textContent = "More";
+  moreButton.textContent = label;
   more.appendChild(moreButton);
 
   const menu = document.createElement("div");
@@ -795,15 +801,23 @@ function createMoreMenu(actions: Action[], buttonStyle: AppState["settings"]["ac
   return more;
 }
 
+function transformActions(state: AppState) {
+  const actionsById = new Map(state.actions.map((action) => [action.id, action]));
+  return transformActionIds
+    .map((actionId) => actionsById.get(actionId))
+    .filter((action): action is Action => Boolean(action));
+}
+
 function renderToolbar() {
   if (extensionContextIsInvalidated || !appState || !lastSelectionRect) {
     return;
   }
 
+  const state = appState;
   const root = ensureToolbarRoot();
-  const scenario = getActiveScenario(appState);
-  const { directActions, overflowActions } = getToolbarActions(appState, scenario, directActionLimit);
-  const buttonStyle = appState.settings.actionButtonStyle;
+  const scenario = getActiveScenario(state);
+  const { directActions, overflowActions } = getToolbarActions(state, scenario, directActionLimit);
+  const buttonStyle = state.settings.actionButtonStyle;
   const actionIsAvailableForContext = (action: Action) =>
     action.id !== screenshotActionId && (activeContextKind === "text" || action.type !== "local");
   const availableActions = [...directActions, ...overflowActions].filter(actionIsAvailableForContext);
@@ -818,7 +832,7 @@ function renderToolbar() {
 
   const scenarioSelect = document.createElement("select");
   scenarioSelect.ariaLabel = "Active Scenario";
-  appState.scenarios.forEach((item) => {
+  state.scenarios.forEach((item) => {
     const option = document.createElement("option");
     option.value = item.id;
     option.textContent = item.name;
@@ -835,6 +849,10 @@ function renderToolbar() {
     Array.from(inner.querySelectorAll(".ai-buddy-context-action,.ai-buddy-more")).forEach((element) => {
       element.remove();
     });
+    const transformMenuActions = activeContextKind === "text" ? transformActions(state) : [];
+    if (transformMenuActions.length > 0) {
+      inner.appendChild(createMoreMenu(transformMenuActions, buttonStyle, "Transform", "ai-buddy-transform"));
+    }
     visibleDirectActions.forEach((action) => {
       const button = actionButton(action, buttonStyle);
       button.classList.add("ai-buddy-context-action");
