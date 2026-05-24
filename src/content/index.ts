@@ -2,6 +2,7 @@ import type { Action, AppState } from "../domain/model";
 import { transformActionIds } from "../domain/defaults";
 import { getFallbackActionIcon } from "../domain/icons";
 import { isLongSelection, longSelectionCharacterLimit, renderPrompt } from "../domain/prompt";
+import { findSensitiveData, sensitiveDataWarningText } from "../domain/sensitiveData";
 import { normalizeAppState } from "../domain/state";
 import { getActiveScenario, getToolbarActions } from "../domain/toolbar";
 import type { PromptAttachment, RuntimeMessage, ScreenshotCaptureRegion } from "../shared/messages";
@@ -490,6 +491,13 @@ async function sendPromptAction(action: Action, userInput?: string) {
       hideToolbar();
       return;
     }
+  }
+
+  const sensitiveFindings = findSensitiveData([lastSelectionText, userInput ?? ""].join("\n"));
+  const sensitiveWarning = sensitiveDataWarningText(sensitiveFindings);
+  if (sensitiveWarning && !window.confirm(sensitiveWarning)) {
+    hideToolbar();
+    return;
   }
 
   let attachments = lastPromptAttachments;
