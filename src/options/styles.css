@@ -135,12 +135,18 @@ p {
 }
 
 .settings-grid label,
-.editor-pane label {
+.editor-pane label,
+.global-prompt-editor {
   display: grid;
   align-content: start;
   gap: 5px;
   color: #465066;
   font-size: 13px;
+}
+
+.global-prompt-editor textarea {
+  min-height: 86px;
+  line-height: 1.45;
 }
 
 .checkbox-row {

@@ -43,6 +43,7 @@ export interface UserSettings {
   activePlatformId: PlatformId;
   includePageUrl: boolean;
   responseLanguage: ResponseLanguage;
+  globalSystemPrompt: string;
   actionButtonStyle: ActionButtonStyle;
   toolbarEnabled: boolean;
   blockedSites: string[];

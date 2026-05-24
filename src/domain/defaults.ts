@@ -6,6 +6,8 @@ export const defaultScenarioId = "learning";
 export const defaultPlatformId = "chatgpt";
 export const defaultPlatformName = "ChatGPT";
 export const defaultTranslationTargetLanguage = "English";
+export const defaultGlobalSystemPrompt =
+  "Respond in English. Use a concise, friendly tone. Be clear, practical, and avoid inventing facts.";
 
 export const defaultActions: Action[] = [
   {
@@ -210,6 +212,7 @@ export function createDefaultSettings(): UserSettings {
     activePlatformId: defaultPlatformId,
     includePageUrl: false,
     responseLanguage: "auto",
+    globalSystemPrompt: defaultGlobalSystemPrompt,
     actionButtonStyle: "iconText",
     toolbarEnabled: true,
     blockedSites: [],

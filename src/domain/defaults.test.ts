@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createDefaultAppState,
+  defaultGlobalSystemPrompt,
   defaultPlatformId,
   defaultScenarioId,
   defaultTranslationTargetLanguage,
@@ -20,6 +21,7 @@ describe("starter defaults", () => {
     expect(state.settings.activeScenarioId).toBe(defaultScenarioId);
     expect(state.settings.activePlatformId).toBe(defaultPlatformId);
     expect(state.settings.responseLanguage).toBe("auto");
+    expect(state.settings.globalSystemPrompt).toBe(defaultGlobalSystemPrompt);
     expect(state.settings.includePageUrl).toBe(false);
     expect(state.settings.actionButtonStyle).toBe("iconText");
     expect(state.meta.hasCompletedOnboarding).toBe(false);
@@ -60,6 +62,7 @@ describe("starter defaults", () => {
         activePlatformId: "missing",
         includePageUrl: true,
         responseLanguage: " Japanese ",
+        globalSystemPrompt: "",
         actionButtonStyle: "iconOnly",
         toolbarEnabled: false,
         blockedSites: ["example.com", 123 as unknown as string],
@@ -72,9 +75,24 @@ describe("starter defaults", () => {
     expect(settings.activePlatformId).toBe("chatgpt");
     expect(settings.includePageUrl).toBe(false);
     expect(settings.responseLanguage).toBe("Japanese");
+    expect(settings.globalSystemPrompt).toBe(defaultGlobalSystemPrompt);
     expect(settings.actionButtonStyle).toBe("iconOnly");
     expect(settings.toolbarEnabled).toBe(false);
     expect(settings.blockedSites).toEqual(["example.com"]);
+  });
+
+  it("trims custom global instructions", () => {
+    const state = createDefaultAppState();
+    const settings = normalizeSettings(
+      {
+        ...state.settings,
+        globalSystemPrompt: " Use a warm tone. ",
+      },
+      state.scenarios,
+      state.platforms,
+    );
+
+    expect(settings.globalSystemPrompt).toBe("Use a warm tone.");
   });
 
   it("refreshes built-in platform metadata from current defaults", () => {

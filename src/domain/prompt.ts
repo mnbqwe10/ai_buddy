@@ -24,6 +24,17 @@ function responseLanguageInstruction(settings: UserSettings) {
     : `Respond in ${settings.responseLanguage}.`;
 }
 
+function globalInstructionBlock(settings: UserSettings) {
+  const instructions = [
+    settings.globalSystemPrompt.trim(),
+    responseLanguageInstruction(settings),
+  ].filter((part) => part !== "");
+
+  return instructions.length === 0
+    ? ""
+    : `Global instructions:\n${instructions.join("\n")}`;
+}
+
 function actionTemplate(action: Action) {
   return (
     action.instruction ??
@@ -51,8 +62,8 @@ export function renderPrompt(
   settings: UserSettings,
 ): RenderedPrompt {
   const promptText = [
+    globalInstructionBlock(settings),
     expandPromptTemplate(action, context).trim(),
-    responseLanguageInstruction(settings),
   ]
     .filter((part) => part !== "")
     .join("\n\n");

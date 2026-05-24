@@ -194,6 +194,10 @@ export function normalizeSettings(
       typeof candidate.responseLanguage === "string" && candidate.responseLanguage.trim()
         ? candidate.responseLanguage.trim()
         : defaults.responseLanguage,
+    globalSystemPrompt:
+      typeof candidate.globalSystemPrompt === "string" && candidate.globalSystemPrompt.trim()
+        ? candidate.globalSystemPrompt.trim()
+        : defaults.globalSystemPrompt,
     actionButtonStyle:
       candidate.actionButtonStyle && actionButtonStyles.has(candidate.actionButtonStyle)
         ? candidate.actionButtonStyle

@@ -5,6 +5,7 @@ import { getFallbackActionIcon, type ActionIconDefinition } from "../domain/icon
 import { responseLanguageOptions, translationLanguageOptions } from "../domain/languages";
 import type { Action, ActionButtonStyle, Scenario } from "../domain/model";
 import { appLogoPath, appName } from "../shared/app";
+import { defaultGlobalSystemPrompt } from "../domain/defaults";
 import { resetEverything, restoreMissingDefaults } from "../domain/state";
 import { createBlankScenario, deleteScenario, updateScenario } from "../domain/scenarios";
 import { useAppState } from "../shared/useAppState";
@@ -549,6 +550,15 @@ function OptionsApp() {
             </select>
           </label>
         </div>
+        <label className="global-prompt-editor">
+          Global Instructions
+          <textarea
+            value={state.settings.globalSystemPrompt}
+            placeholder={defaultGlobalSystemPrompt}
+            onChange={(event) => setSettings({ globalSystemPrompt: event.target.value })}
+          />
+          <small>Included at the beginning of every prompt. Keep it short and preference-focused.</small>
+        </label>
       </section>
 
       <section className="panel">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createDefaultAppState } from "./defaults";
+import { createDefaultAppState, defaultGlobalSystemPrompt } from "./defaults";
 import { isLongSelection, longSelectionCharacterLimit, renderPrompt } from "./prompt";
 import { resolveSendMode } from "./sendPolicy";
 
@@ -17,6 +17,7 @@ describe("prompt rendering", () => {
     );
 
     expect(rendered.promptText).toContain("Revenue grew 18%");
+    expect(rendered.promptText).toContain(defaultGlobalSystemPrompt);
     expect(rendered.promptText).toContain("Page title: Quarterly report");
     expect(rendered.promptText).not.toContain("https://example.com/private");
   });
@@ -39,6 +40,26 @@ describe("prompt rendering", () => {
     expect(rendered.promptText).not.toContain("Page URL:");
     expect(rendered.promptText).not.toContain("https://example.com/report");
     expect(rendered.promptText).toContain("Respond in Japanese.");
+  });
+
+  it("renders global instructions before the action prompt", () => {
+    const state = createDefaultAppState();
+    const explain = state.actions.find((action) => action.id === "explain")!;
+    state.settings.globalSystemPrompt = "Use a direct, calm tone.";
+    state.settings.responseLanguage = "Japanese";
+
+    const rendered = renderPrompt(
+      explain,
+      {
+        selectedText: "Revenue grew 18%",
+        pageTitle: "Quarterly report",
+      },
+      state.settings,
+    );
+
+    expect(rendered.promptText).toMatch(
+      /^Global instructions:\nUse a direct, calm tone\.\nRespond in Japanese\.\n\nExplain the following text/,
+    );
   });
 
   it("renders Translate with the Translation Target Language", () => {
