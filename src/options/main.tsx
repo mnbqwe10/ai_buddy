@@ -1,9 +1,10 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createCustomPromptAction, deleteAction, getActionUsage, updateAction } from "../domain/actions";
 import { getFallbackActionIcon, type ActionIconDefinition } from "../domain/icons";
 import { responseLanguageOptions, translationLanguageOptions } from "../domain/languages";
 import type { Action, ActionButtonStyle, Scenario } from "../domain/model";
+import { parsePortableAppState, serializePortableAppState } from "../domain/portableState";
 import { appLogoPath, appName } from "../shared/app";
 import { defaultGlobalSystemPrompt } from "../domain/defaults";
 import { resetEverything, restoreMissingDefaults } from "../domain/state";
@@ -277,6 +278,7 @@ function OptionsApp() {
   const [selectedActionId, setSelectedActionId] = useState("");
   const [scenarioDraft, setScenarioDraft] = useState<ScenarioDraft | null>(null);
   const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const activeScenario = state?.scenarios.find(
     (scenario) => scenario.id === state.settings.activeScenarioId,
@@ -343,6 +345,39 @@ function OptionsApp() {
       await replaceState(resetEverything());
       setSelectedScenarioId("");
       setSelectedActionId("");
+    }
+  }
+
+  function exportSettings() {
+    const blob = new Blob([serializePortableAppState(state!)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ai-buddy-settings-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importSettings(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    try {
+      const importedState = parsePortableAppState(await file.text());
+      if (!window.confirm("Import these AI Buddy settings? This will replace current Scenarios, Actions, Chat Platforms, and preferences.")) {
+        return;
+      }
+
+      await replaceState(importedState);
+      setSelectedScenarioId(importedState.settings.activeScenarioId);
+      setSelectedActionId(importedState.actions[0]?.id ?? "");
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to import settings.");
+    } finally {
+      if (importInputRef.current) {
+        importInputRef.current.value = "";
+      }
     }
   }
 
@@ -502,6 +537,19 @@ function OptionsApp() {
           </div>
         </div>
         <div className="header-actions">
+          <button type="button" className="secondary-button" onClick={exportSettings}>
+            Export settings
+          </button>
+          <button type="button" className="secondary-button" onClick={() => importInputRef.current?.click()}>
+            Import settings
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(event) => void importSettings(event.target.files?.[0])}
+          />
           <button type="button" onClick={restoreDefaults}>
             Restore missing defaults
           </button>
