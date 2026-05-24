@@ -1,5 +1,6 @@
-import { ensureAppState } from "../shared/storage";
+import { nextScenarioId } from "../domain/scenarioSwitching";
 import type { RuntimeMessage } from "../shared/messages";
+import { ensureAppState, getAppState, saveAppState } from "../shared/storage";
 import { createPromptRouter } from "./promptRouter";
 import { platformFrameRules } from "./platformFrameRules";
 import { cropScreenshotDataUrl } from "./screenshotCapture";
@@ -30,7 +31,24 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === "toggle-sidebar") {
     openSidePanel({ windowId: chrome.windows.WINDOW_ID_CURRENT });
   }
+
+  if (command === "cycle-scenario") {
+    void cycleActiveScenario().catch((error) => {
+      console.warn("[AI Buddy] Unable to cycle Scenario", error);
+    });
+  }
 });
+
+async function cycleActiveScenario() {
+  const state = await getAppState();
+  await saveAppState({
+    ...state,
+    settings: {
+      ...state.settings,
+      activeScenarioId: nextScenarioId(state),
+    },
+  });
+}
 
 function reportUnexpectedSidePanelError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);

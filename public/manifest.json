@@ -82,6 +82,13 @@
         "mac": "Command+Space"
       },
       "description": "Open AI Buddy side panel"
+    },
+    "cycle-scenario": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Cycle AI Buddy Scenario"
     }
   }
 }
