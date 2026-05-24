@@ -149,6 +149,38 @@ p {
   line-height: 1.45;
 }
 
+.pinned-actions-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.pinned-actions-editor h3 {
+  margin: 0 0 3px;
+  font-size: 15px;
+}
+
+.pinned-action-add {
+  display: flex;
+  max-width: 320px;
+}
+
+.pinned-action-add select {
+  width: 100%;
+}
+
+.pinned-action-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pinned-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
 .checkbox-row {
   display: flex !important;
   align-items: center;

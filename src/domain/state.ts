@@ -32,6 +32,7 @@ function knownIds<T extends { id: string }>(items: T[]): Set<string> {
 const actionTypes = new Set<ActionType>(["local", "prompt", "inputPrompt", "panel"]);
 const actionButtonStyles = new Set<ActionButtonStyle>(["iconOnly", "iconText"]);
 const platformTypes = new Set<PlatformType>(["aiChat", "messaging"]);
+const maxPinnedActions = 3;
 const legacyIconTextByName: Record<string, string> = {
   "Cp": "copy",
   "?": "question-mark",
@@ -198,6 +199,10 @@ export function normalizeSettings(
       typeof candidate.globalSystemPrompt === "string" && candidate.globalSystemPrompt.trim()
         ? candidate.globalSystemPrompt.trim()
         : defaults.globalSystemPrompt,
+    pinnedActionIds: Array.isArray(candidate.pinnedActionIds)
+      ? [...new Set(candidate.pinnedActionIds.filter((actionId): actionId is string => typeof actionId === "string"))]
+          .slice(0, maxPinnedActions)
+      : defaults.pinnedActionIds,
     actionButtonStyle:
       candidate.actionButtonStyle && actionButtonStyles.has(candidate.actionButtonStyle)
         ? candidate.actionButtonStyle

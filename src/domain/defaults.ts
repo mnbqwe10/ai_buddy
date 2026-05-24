@@ -482,6 +482,7 @@ export function createDefaultSettings(): UserSettings {
     includePageUrl: false,
     responseLanguage: "auto",
     globalSystemPrompt: defaultGlobalSystemPrompt,
+    pinnedActionIds: [],
     actionButtonStyle: "iconText",
     toolbarEnabled: true,
     blockedSites: [],

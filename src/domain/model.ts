@@ -44,6 +44,7 @@ export interface UserSettings {
   includePageUrl: boolean;
   responseLanguage: ResponseLanguage;
   globalSystemPrompt: string;
+  pinnedActionIds: ActionId[];
   actionButtonStyle: ActionButtonStyle;
   toolbarEnabled: boolean;
   blockedSites: string[];

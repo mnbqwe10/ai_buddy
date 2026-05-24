@@ -13,6 +13,7 @@ import { getTablerIcon, tablerIconCatalog } from "./iconCatalog";
 import "./styles.css";
 
 type ScenarioDraft = Pick<Scenario, "id" | "name" | "color" | "actionIds">;
+const maxPinnedActions = 3;
 
 interface ActionDraft {
   id: string;
@@ -472,6 +473,24 @@ function OptionsApp() {
     );
   }
 
+  function addPinnedAction(actionId: string) {
+    const current = state!.settings.pinnedActionIds;
+    if (!actionId || current.includes(actionId) || current.length >= maxPinnedActions) {
+      return;
+    }
+
+    setSettings({ pinnedActionIds: [...current, actionId] });
+  }
+
+  function removePinnedAction(actionId: string) {
+    setSettings({
+      pinnedActionIds: state!.settings.pinnedActionIds.filter((id) => id !== actionId),
+    });
+  }
+
+  const pinnedActionIds = state.settings.pinnedActionIds;
+  const availablePinnedActions = state.actions.filter((action) => !pinnedActionIds.includes(action.id));
+
   return (
     <main className="options-shell">
       <header className="page-header">
@@ -559,6 +578,45 @@ function OptionsApp() {
           />
           <small>Included at the beginning of every prompt. Keep it short and preference-focused.</small>
         </label>
+        <div className="pinned-actions-editor">
+          <div>
+            <h3>Pinned Actions</h3>
+            <small>{pinnedActionIds.length} of {maxPinnedActions} pinned.</small>
+          </div>
+          <div className="pinned-action-add">
+            <select
+              value=""
+              disabled={pinnedActionIds.length >= maxPinnedActions || availablePinnedActions.length === 0}
+              onChange={(event) => addPinnedAction(event.target.value)}
+              aria-label="Add pinned Action"
+            >
+              <option value="">Add Action...</option>
+              {availablePinnedActions.map((action) => (
+                <option key={action.id} value={action.id}>
+                  {action.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="pinned-action-list">
+            {pinnedActionIds.length === 0 && <small>No pinned Actions.</small>}
+            {pinnedActionIds.map((actionId) => {
+              const action = actionsById.get(actionId);
+              return (
+                <span className="pinned-action-chip" key={actionId}>
+                  {action ? (
+                    <ActionButtonPreview action={action} buttonStyle={state.settings.actionButtonStyle} />
+                  ) : (
+                    <span>{actionId}</span>
+                  )}
+                  <button type="button" className="icon-button" onClick={() => removePinnedAction(actionId)}>
+                    Remove
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       <section className="panel">

@@ -24,6 +24,7 @@ describe("starter defaults", () => {
     expect(state.settings.activePlatformId).toBe(defaultPlatformId);
     expect(state.settings.responseLanguage).toBe("auto");
     expect(state.settings.globalSystemPrompt).toBe(defaultGlobalSystemPrompt);
+    expect(state.settings.pinnedActionIds).toEqual([]);
     expect(state.settings.includePageUrl).toBe(false);
     expect(state.settings.actionButtonStyle).toBe("iconText");
     expect(state.meta.hasCompletedOnboarding).toBe(false);
@@ -87,6 +88,7 @@ describe("starter defaults", () => {
         includePageUrl: true,
         responseLanguage: " Japanese ",
         globalSystemPrompt: "",
+        pinnedActionIds: ["summarize", "summarize", "ask", 123 as unknown as string, "translate"],
         actionButtonStyle: "iconOnly",
         toolbarEnabled: false,
         blockedSites: ["example.com", 123 as unknown as string],
@@ -100,6 +102,7 @@ describe("starter defaults", () => {
     expect(settings.includePageUrl).toBe(false);
     expect(settings.responseLanguage).toBe("Japanese");
     expect(settings.globalSystemPrompt).toBe(defaultGlobalSystemPrompt);
+    expect(settings.pinnedActionIds).toEqual(["summarize", "ask", "translate"]);
     expect(settings.actionButtonStyle).toBe("iconOnly");
     expect(settings.toolbarEnabled).toBe(false);
     expect(settings.blockedSites).toEqual(["example.com"]);

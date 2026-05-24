@@ -37,4 +37,20 @@ describe("toolbar action projection", () => {
     ]);
     expect(toolbarActions.overflowActions.map((action) => action.id)).toEqual(["ask"]);
   });
+
+  it("shows pinned Actions first without duplicating Scenario Actions", () => {
+    const state = createDefaultAppState();
+    state.settings.pinnedActionIds = ["summarize", "brainstorm"];
+    const learning = state.scenarios.find((scenario) => scenario.id === "learning")!;
+    const toolbarActions = getToolbarActions(state, learning, 5);
+
+    expect(toolbarActions.directActions.map((action) => action.id)).toEqual([
+      "summarize",
+      "brainstorm",
+      "copy",
+      "explain",
+      "translate",
+    ]);
+    expect(toolbarActions.overflowActions.map((action) => action.id)).toEqual(["ask"]);
+  });
 });
