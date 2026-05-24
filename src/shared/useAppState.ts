@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AppState, UserSettings } from "../domain/model";
-import { ensureAppState, getAppState, saveAppState, updateSettings } from "./storage";
+import { appStateKey, ensureAppState, getAppState, saveAppState, updateSettings } from "./storage";
 
 export interface AppStateView {
   state: AppState | null;
@@ -36,6 +36,23 @@ export function useAppState(): AppStateView {
       setState(next);
       setIsLoading(false);
     });
+  }, []);
+
+  useEffect(() => {
+    if (!chrome.storage?.onChanged) {
+      return;
+    }
+
+    const listener = (changes: Record<string, chrome.storage.StorageChange>, areaName: string) => {
+      if (areaName !== "local" || !changes[appStateKey]?.newValue) {
+        return;
+      }
+
+      setState(changes[appStateKey].newValue as AppState);
+    };
+
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
   }, []);
 
   return { state, isLoading, setSettings, replaceState, refresh };

@@ -28,7 +28,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command === "open-side-panel") {
+  if (command === "toggle-sidebar") {
     openSidePanel({ windowId: chrome.windows.WINDOW_ID_CURRENT });
   }
 

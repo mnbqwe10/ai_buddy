@@ -27,7 +27,7 @@ const shortcutLabels: Record<string, string> = {
   "open-toolbar": "Open Toolbar",
   "capture-screenshot": "Screenshot",
   "toggle-toolbar-enabled": "Enable or Disable Toolbar",
-  "open-side-panel": "Open Side Panel",
+  "toggle-sidebar": "Open Side Panel",
   "cycle-scenario": "Cycle Scenario",
 };
 
