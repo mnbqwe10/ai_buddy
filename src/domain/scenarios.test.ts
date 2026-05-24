@@ -68,7 +68,18 @@ describe("Scenario management", () => {
 
   it("reorders Scenarios and Scenario Actions", () => {
     let state = moveScenario(createDefaultAppState(), "creative", -1);
-    expect(state.scenarios.map((scenario) => scenario.id)).toEqual(["learning", "creative", "workplace"]);
+    expect(state.scenarios.map((scenario) => scenario.id)).toEqual([
+      "learning",
+      "creative",
+      "workplace",
+      "research",
+      "writing",
+      "coding",
+      "marketingSales",
+      "customerSupport",
+      "dataAnalysis",
+      "planning",
+    ]);
 
     state = moveScenarioAction(state, "learning", "ask", -1);
     expect(state.scenarios.find((scenario) => scenario.id === "learning")?.actionIds).toEqual([

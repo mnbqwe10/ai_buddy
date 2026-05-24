@@ -121,6 +121,226 @@ export const defaultActions: Action[] = [
       "Turn the selected text into a strong prompt for image generation or design exploration. Make the prompt specific, visual, and easy to use in a creative AI tool.\n\nText:\n\"{{selected_text}}\"",
     isBuiltIn: true,
   },
+  {
+    id: "researchBrief",
+    name: "Research Brief",
+    type: "prompt",
+    icon: "search",
+    color: "#0F766E",
+    instruction:
+      "Turn the selected material into a concise research brief. Identify the main question, key facts, supporting evidence, uncertainties, and 3 follow-up questions.\n\nMaterial:\n\"{{selected_text}}\"\n\nPage title: {{page_title}}",
+    isBuiltIn: true,
+  },
+  {
+    id: "extractInsights",
+    name: "Extract Insights",
+    type: "prompt",
+    icon: "report-analytics",
+    color: "#2563EB",
+    instruction:
+      "Extract the most important insights from the selected material. Group them as Findings, Evidence, Risks or caveats, and Next steps. Preserve important names, numbers, dates, and quotes.\n\nMaterial:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "compareOptions",
+    name: "Compare Options",
+    type: "prompt",
+    icon: "chart-dots",
+    color: "#7C3AED",
+    instruction:
+      "Compare the options, claims, viewpoints, or tradeoffs in the selected text. Use a compact table when useful, then recommend the strongest option if the evidence supports one.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "outline",
+    name: "Outline",
+    type: "prompt",
+    icon: "file-text",
+    color: "#4F46E5",
+    instruction:
+      "Create a clear outline from the selected text. Organize it into logical sections, include the main argument or purpose, and add concise bullet points under each section.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "rewrite",
+    name: "Rewrite",
+    type: "prompt",
+    icon: "notes",
+    color: "#0891B2",
+    instruction:
+      "Rewrite the selected text for clarity, flow, and readability. Preserve the original meaning, important details, and factual claims. Keep the result ready to use.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "explainCode",
+    name: "Explain Code",
+    type: "prompt",
+    icon: "code",
+    color: "#334155",
+    instruction:
+      "Explain what this code does. Cover the purpose, important inputs and outputs, control flow, dependencies, and any assumptions or edge cases visible in the snippet.\n\nCode:\n```text\n{{selected_text}}\n```",
+    isBuiltIn: true,
+  },
+  {
+    id: "debugCode",
+    name: "Debug Code",
+    type: "prompt",
+    icon: "bug",
+    color: "#DC2626",
+    instruction:
+      "Review this code or error text for likely bugs. Identify the root cause, explain why it happens, and suggest the smallest safe fix. If information is missing, state what to check next.\n\nCode or error:\n```text\n{{selected_text}}\n```",
+    isBuiltIn: true,
+  },
+  {
+    id: "writeTests",
+    name: "Write Tests",
+    type: "prompt",
+    icon: "checklist",
+    color: "#16A34A",
+    instruction:
+      "Suggest focused tests for the selected code or behavior. Cover the main success path, edge cases, and one regression case. Use the apparent language or framework when possible.\n\nContext:\n```text\n{{selected_text}}\n```",
+    isBuiltIn: true,
+  },
+  {
+    id: "documentCode",
+    name: "Document Code",
+    type: "prompt",
+    icon: "file-text",
+    color: "#475569",
+    instruction:
+      "Create concise developer documentation for the selected code. Explain what it is for, how to use it, important parameters or data shapes, and any gotchas.\n\nCode:\n```text\n{{selected_text}}\n```",
+    isBuiltIn: true,
+  },
+  {
+    id: "campaignIdeas",
+    name: "Campaign Ideas",
+    type: "prompt",
+    icon: "bulb",
+    color: "#DB2777",
+    instruction:
+      "Generate marketing campaign ideas from the selected text. Include audience, angle, key message, channel suggestions, and one practical next step for each idea.\n\nBrief:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "marketingCopy",
+    name: "Marketing Copy",
+    type: "prompt",
+    icon: "target",
+    color: "#BE123C",
+    instruction:
+      "Write concise marketing copy from the selected text. Produce a headline, short value proposition, 3 benefit bullets, and a clear call to action. Avoid unsupported claims.\n\nBrief:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "socialPost",
+    name: "Social Post",
+    type: "prompt",
+    icon: "message",
+    color: "#0D9488",
+    instruction:
+      "Turn the selected text into a social media post. Keep it specific, skimmable, and platform-neutral. Include one hook, the body copy, and 3 optional hashtags.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "salesEmail",
+    name: "Sales Email",
+    type: "prompt",
+    icon: "mail",
+    color: "#EA580C",
+    instruction:
+      "Draft a short sales email from the selected context. Include a relevant opener, a clear value proposition, one proof point or reason to believe, and a low-pressure call to action.\n\nContext:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "handleObjection",
+    name: "Handle Objection",
+    type: "prompt",
+    icon: "user-question",
+    color: "#A16207",
+    instruction:
+      "Prepare a thoughtful response to the objection or concern in the selected text. Acknowledge the concern, answer directly, avoid pressure, and suggest a practical next step.\n\nObjection or context:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "ticketSummary",
+    name: "Ticket Summary",
+    type: "prompt",
+    icon: "clipboard-list",
+    color: "#7C2D12",
+    instruction:
+      "Summarize this support ticket or conversation. Include the customer's issue, impact, steps already tried, likely cause if clear, and recommended next action.\n\nTicket:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "supportReply",
+    name: "Support Reply",
+    type: "prompt",
+    icon: "headset",
+    color: "#0284C7",
+    instruction:
+      "Draft a helpful customer support reply. Be empathetic, specific, and action-oriented. Do not promise outcomes, refunds, timelines, or policy exceptions unless they appear in the selected text.\n\nCustomer message:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "kbArticle",
+    name: "KB Article",
+    type: "prompt",
+    icon: "file-text",
+    color: "#6366F1",
+    instruction:
+      "Turn the selected support or product context into a knowledge base article. Include a clear title, when to use it, step-by-step instructions, and troubleshooting notes.\n\nContext:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "analyzeData",
+    name: "Analyze Data",
+    type: "prompt",
+    icon: "chart-bar",
+    color: "#2563EB",
+    instruction:
+      "Analyze the selected data or notes. Identify trends, outliers, possible explanations, and decisions the data supports. Call out limitations before making recommendations.\n\nData:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "makeTable",
+    name: "Make Table",
+    type: "prompt",
+    icon: "table",
+    color: "#0891B2",
+    instruction:
+      "Convert the selected text into a clean table. Choose useful column names, preserve important values, and add a short note for any assumptions or missing data.\n\nText:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "meetingNotes",
+    name: "Meeting Notes",
+    type: "prompt",
+    icon: "notes",
+    color: "#4F46E5",
+    instruction:
+      "Convert the selected meeting text into concise notes. Include decisions, action items with owners if available, open questions, and follow-up deadlines mentioned in the text.\n\nMeeting text:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "actionPlan",
+    name: "Action Plan",
+    type: "prompt",
+    icon: "list-check",
+    color: "#059669",
+    instruction:
+      "Turn the selected text into a practical action plan. List goals, next steps, owners or roles if available, dependencies, risks, and a sensible order of execution.\n\nContext:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
+  {
+    id: "prioritize",
+    name: "Prioritize",
+    type: "prompt",
+    icon: "checklist",
+    color: "#CA8A04",
+    instruction:
+      "Prioritize the items in the selected text. Group them into Now, Next, and Later, explain the reasoning briefly, and call out anything blocked or missing.\n\nItems:\n\"{{selected_text}}\"",
+    isBuiltIn: true,
+  },
 ];
 
 export const defaultScenarios: Scenario[] = [
@@ -143,6 +363,55 @@ export const defaultScenarios: Scenario[] = [
     name: "Creative",
     color: "#DB2777",
     actionIds: ["brainstorm", "visualize", "nameIdeas", "makePrompt", "ask"],
+    isStarter: true,
+  },
+  {
+    id: "research",
+    name: "Research",
+    color: "#0F766E",
+    actionIds: ["copy", "researchBrief", "extractInsights", "compareOptions", "summarize", "ask"],
+    isStarter: true,
+  },
+  {
+    id: "writing",
+    name: "Writing",
+    color: "#4F46E5",
+    actionIds: ["copy", "outline", "rewrite", "polish", "summarize", "ask"],
+    isStarter: true,
+  },
+  {
+    id: "coding",
+    name: "Coding",
+    color: "#334155",
+    actionIds: ["copy", "explainCode", "debugCode", "writeTests", "documentCode", "ask"],
+    isStarter: true,
+  },
+  {
+    id: "marketingSales",
+    name: "Marketing & Sales",
+    color: "#BE123C",
+    actionIds: ["brainstorm", "campaignIdeas", "marketingCopy", "socialPost", "salesEmail", "handleObjection"],
+    isStarter: true,
+  },
+  {
+    id: "customerSupport",
+    name: "Customer Support",
+    color: "#0284C7",
+    actionIds: ["ticketSummary", "supportReply", "kbArticle", "draftReply", "ask"],
+    isStarter: true,
+  },
+  {
+    id: "dataAnalysis",
+    name: "Data Analysis",
+    color: "#2563EB",
+    actionIds: ["extractInsights", "analyzeData", "makeTable", "visualize", "ask"],
+    isStarter: true,
+  },
+  {
+    id: "planning",
+    name: "Planning",
+    color: "#059669",
+    actionIds: ["meetingNotes", "actionPlan", "prioritize", "draftReply", "ask"],
     isStarter: true,
   },
 ];

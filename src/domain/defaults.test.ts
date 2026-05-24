@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   createDefaultAppState,
   defaultGlobalSystemPrompt,
+  defaultActions,
   defaultPlatformId,
   defaultScenarioId,
+  defaultScenarios,
   defaultTranslationTargetLanguage,
 } from "./defaults";
 import {
@@ -29,7 +31,15 @@ describe("starter defaults", () => {
       ["learning", "#2563EB"],
       ["workplace", "#059669"],
       ["creative", "#DB2777"],
+      ["research", "#0F766E"],
+      ["writing", "#4F46E5"],
+      ["coding", "#334155"],
+      ["marketingSales", "#BE123C"],
+      ["customerSupport", "#0284C7"],
+      ["dataAnalysis", "#2563EB"],
+      ["planning", "#059669"],
     ]);
+    expect(state.scenarios).toHaveLength(10);
     expect(state.platforms.map((platform) => platform.id)).toEqual([
       "chatgpt",
       "claude",
@@ -52,6 +62,20 @@ describe("starter defaults", () => {
       icon: "question-mark",
       color: "#2563EB",
     });
+  });
+
+  it("keeps every default Scenario wired to known default Actions", () => {
+    const actionIds = new Set(defaultActions.map((action) => action.id));
+
+    expect(defaultScenarios).toHaveLength(10);
+    expect(defaultScenarios.flatMap((scenario) => scenario.actionIds)).toEqual(
+      expect.arrayContaining(["researchBrief", "debugCode", "supportReply", "analyzeData", "actionPlan"]),
+    );
+    expect(
+      defaultScenarios.flatMap((scenario) =>
+        scenario.actionIds.filter((actionId) => !actionIds.has(actionId)),
+      ),
+    ).toEqual([]);
   });
 
   it("normalizes invalid settings back to known defaults", () => {
@@ -148,8 +172,20 @@ describe("starter defaults", () => {
     expect(restored.scenarios.find((scenario) => scenario.id === "learning")?.name).toBe("My Learning");
     expect(restored.actions.find((action) => action.id === "copy")?.name).toBe("Copy Now");
     expect(restored.actions.find((action) => action.id === "copy")?.color).toBe("#475569");
-    expect(restored.scenarios.map((scenario) => scenario.id)).toEqual(["learning", "workplace", "creative"]);
+    expect(restored.scenarios.map((scenario) => scenario.id)).toEqual([
+      "learning",
+      "workplace",
+      "creative",
+      "research",
+      "writing",
+      "coding",
+      "marketingSales",
+      "customerSupport",
+      "dataAnalysis",
+      "planning",
+    ]);
     expect(restored.actions.some((action) => action.id === "translate")).toBe(true);
+    expect(restored.actions.some((action) => action.id === "researchBrief")).toBe(true);
   });
 
   it("separates onboarding completion from destructive reset", () => {
