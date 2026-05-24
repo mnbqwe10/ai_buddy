@@ -22,14 +22,14 @@ Capture part of the current page, add a short instruction, and send the screensh
 
 AI Buddy is a Chrome extension that adds a selection toolbar for sending selected page text to an AI chat platform. It opens the platform in Chrome's side panel and uses reusable scenario actions such as Explain, Translate, Summarize, Draft Reply, Polish, Brainstorm, and Visualize.
 
-## What's New in v1.1.1
+## What's New in v1.2.0
 
-- Removed the `clipboardWrite` manifest permission and the screenshot-to-clipboard fallback.
-- If a screenshot cannot be attached automatically, AI Buddy drafts the prompt and asks you to upload the screenshot manually.
-- Improved screenshot prompt delivery for Claude, DeepSeek, and WhatsApp Web.
-- Claude now waits for its upload surface before attaching screenshots and avoids sending text alone if an upload fails.
-- DeepSeek now waits longer for slow image uploads and targets its enabled send control more reliably.
-- WhatsApp Web now uses the media caption flow so screenshots and prompt text are sent together.
+- Expanded starter Scenarios to 10: Learning, Workplace, Creative, Research, Writing, Coding, Marketing & Sales, Customer Support, Data Analysis, and Planning.
+- Added global instructions, pinned favorite Actions, and a **Transform** menu for tweet, table, mind map, Mermaid, checklist, quiz, flashcards, and user story outputs.
+- Added screenshot annotation before send: crop, highlight, blur sensitive areas, draw arrows, and add labels.
+- Added Sensitive Data Warning for likely emails, phone numbers, API keys, street addresses, and financial numbers before sending selected text.
+- Added keyboard shortcuts for Enable/Disable Toolbar, Open Side Panel, Screenshot, and Next Scenario. View and edit them from the Options Page.
+- Added settings import/export, plus per-platform send behavior profiles such as auto-send, draft-only, paste-only, and open-side-panel-first.
 
 ## Important Notes
 
@@ -69,7 +69,22 @@ Messaging platforms such as WhatsApp, Telegram, and Discord draft prompts only u
 
 ## Customize
 
-Open the extension options page to manage preferences, scenarios, and reusable actions. Scenario action order controls the toolbar order. Editing a reusable action updates every scenario that uses it.
+Open the extension options page to manage preferences, scenarios, reusable actions, pinned Actions, platform send behavior, global instructions, and import/export. Scenario action order controls the toolbar order. Editing a reusable action updates every scenario that uses it.
+
+## Keyboard Shortcuts
+
+Default shortcuts:
+
+- Enable or Disable Toolbar: `Ctrl+Shift+1`
+- Open Side Panel: `Ctrl+Shift+2`
+- Screenshot: `Ctrl+Shift+3`
+- Next Scenario: `Ctrl+Shift+4`
+
+Chrome manages extension shortcuts at `chrome://extensions/shortcuts`. The Options Page shows the current assignment and links to Chrome's shortcut editor.
+
+## Screenshot Annotation
+
+Start a screenshot capture, drag to crop the page region, then choose a Prompt Action. Before sending, AI Buddy opens an annotation screen where you can highlight, blur, draw arrows, add labels, undo changes, or skip annotation.
 
 ## Development
 

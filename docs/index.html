@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Buddy - Chrome extension for screenshot and AI workflows</title>
+    <title>AI Buddy - Chrome extension for screenshot, shortcuts, and AI workflows</title>
     <meta
       name="description"
-      content="AI Buddy is a Chrome extension that turns selected page text and screenshots into reusable prompts and sends them to your preferred AI chat platform from Chrome's side panel."
+      content="AI Buddy is a Chrome extension that turns selected page text and annotated screenshots into reusable prompts, keyboard shortcuts, and AI workflows in Chrome's side panel."
     >
     <meta property="og:title" content="AI Buddy - Chrome extension">
     <meta
@@ -53,10 +53,10 @@
         </div>
         <div class="hero-copy">
           <p class="eyebrow">Free Chrome screenshot and sidebar assistant</p>
-          <h1 id="hero-title">Send screenshots and page context to AI chat.</h1>
+          <h1 id="hero-title">Send annotated screenshots and page context to AI chat.</h1>
           <p class="hero-lede">
             Capture part of a webpage or highlight text, choose a reusable action, and send a polished
-            prompt to your preferred AI chat platform without losing the page context.
+            prompt to your preferred AI chat platform with shortcuts, safety checks, and workflow profiles.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
             <a
@@ -73,9 +73,10 @@
             <a class="button button-secondary" href="#demo">See AI Buddy in action</a>
           </div>
           <div class="trust-row" aria-label="Project highlights">
-            <span>Screenshot prompts</span>
+            <span>Annotated screenshots</span>
+            <span>10 starter scenarios</span>
+            <span>Keyboard shortcuts</span>
             <span>No AI Buddy backend</span>
-            <span>No chat message storage</span>
           </div>
         </div>
         <div class="hero-preview" aria-label="AI Buddy product preview">
@@ -295,6 +296,59 @@
         </article>
       </section>
 
+      <section class="section release-section" aria-labelledby="release-title">
+        <div class="section-heading">
+          <p class="eyebrow">New in v1.2</p>
+          <h2 id="release-title">More control for daily AI workflows.</h2>
+          <p>
+            AI Buddy now includes deeper Scenario coverage, safer sending, faster shortcuts, and portable
+            settings while keeping the same lightweight toolbar model.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon">10</span>
+            <h3>Ten starter Scenarios</h3>
+            <p>Start from Learning, Workplace, Creative, Research, Writing, Coding, Marketing & Sales, Customer Support, Data Analysis, or Planning.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">K</span>
+            <h3>Keyboard shortcuts</h3>
+            <p>Use shortcuts for toolbar enablement, side panel, screenshots, and the next Scenario. Edit assignments from Chrome's shortcut page.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">Pin</span>
+            <h3>Pinned Actions</h3>
+            <p>Keep two or three favorite Actions at the front of the toolbar no matter which Scenario is active.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">T</span>
+            <h3>Transform menu</h3>
+            <p>Turn selected text into a tweet, table, mind map, Mermaid diagram, checklist, quiz, flashcards, or user story.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">Edit</span>
+            <h3>Screenshot annotation</h3>
+            <p>Crop first, then highlight, blur, add arrows, or label the screenshot before sending it to the Chat Platform.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">!</span>
+            <h3>Sensitive Data Warning</h3>
+            <p>Get a confirmation prompt when selected text appears to contain emails, phone numbers, API keys, addresses, or financial numbers.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">IO</span>
+            <h3>Import and export</h3>
+            <p>Back up or move Scenarios, Actions, Chat Platforms, global instructions, and preferences as a JSON file.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">P</span>
+            <h3>Platform profiles</h3>
+            <p>Choose auto-send, draft-only, paste-only, or open-side-panel-first behavior for each Chat Platform.</p>
+          </article>
+        </div>
+      </section>
+
       <section class="section features" id="features" aria-labelledby="features-title">
         <div class="section-heading">
           <p class="eyebrow">What it does</p>
@@ -308,7 +362,7 @@
           <article class="feature-card">
             <span class="feature-icon">I</span>
             <h3>Screenshot prompts</h3>
-            <p>Capture part of the page, add an instruction, and send the image plus prompt text together.</p>
+            <p>Capture part of the page, annotate it if needed, add an instruction, and send the image plus prompt text together.</p>
           </article>
           <article class="feature-card">
             <span class="feature-icon">A</span>
@@ -318,12 +372,12 @@
           <article class="feature-card">
             <span class="feature-icon">S</span>
             <h3>Scenario libraries</h3>
-            <p>Group actions for learning, workplace, creative work, or your own custom workflow.</p>
+            <p>Group actions for learning, workplace, creative work, coding, research, planning, and your own custom workflow.</p>
           </article>
           <article class="feature-card">
             <span class="feature-icon">P</span>
             <h3>Prompt control</h3>
-            <p>Customize templates, response language, toolbar order, colors, and platform behavior.</p>
+            <p>Customize templates, global instructions, response language, pinned actions, toolbar order, colors, and platform behavior.</p>
           </article>
           <article class="feature-card">
             <span class="feature-icon">C</span>

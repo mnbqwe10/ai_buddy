@@ -755,6 +755,7 @@ h1 {
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(17, 191, 231, 0.16), rgba(139, 92, 246, 0.16));
   color: var(--blue);
+  font-size: 0.78rem;
   font-weight: 900;
 }
 
