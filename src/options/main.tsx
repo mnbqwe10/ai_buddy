@@ -4,6 +4,7 @@ import { createCustomPromptAction, deleteAction, getActionUsage, updateAction } 
 import { getFallbackActionIcon, type ActionIconDefinition } from "../domain/icons";
 import { responseLanguageOptions, translationLanguageOptions } from "../domain/languages";
 import type { Action, ActionButtonStyle, Scenario } from "../domain/model";
+import type { PlatformSendBehavior } from "../domain/model";
 import { parsePortableAppState, serializePortableAppState } from "../domain/portableState";
 import { appLogoPath, appName } from "../shared/app";
 import { defaultGlobalSystemPrompt } from "../domain/defaults";
@@ -283,6 +284,9 @@ function OptionsApp() {
   const activeScenario = state?.scenarios.find(
     (scenario) => scenario.id === state.settings.activeScenarioId,
   );
+  const activePlatform =
+    state?.platforms.find((platform) => platform.id === state.settings.activePlatformId) ??
+    state?.platforms[0];
   const selectedScenario =
     state?.scenarios.find((scenario) => scenario.id === selectedScenarioId) ??
     activeScenario ??
@@ -523,6 +527,19 @@ function OptionsApp() {
     });
   }
 
+  async function updateActivePlatformSendBehavior(sendBehavior: PlatformSendBehavior) {
+    if (!activePlatform) {
+      return;
+    }
+
+    await replaceState({
+      ...state!,
+      platforms: state!.platforms.map((platform) =>
+        platform.id === activePlatform.id ? { ...platform, sendBehavior } : platform,
+      ),
+    });
+  }
+
   const pinnedActionIds = state.settings.pinnedActionIds;
   const availablePinnedActions = state.actions.filter((action) => !pinnedActionIds.includes(action.id));
 
@@ -589,6 +606,20 @@ function OptionsApp() {
                   {platform.name}
                 </option>
               ))}
+            </select>
+          </label>
+          <label>
+            Send Behavior
+            <select
+              value={activePlatform?.sendBehavior ?? "autoSubmit"}
+              onChange={(event) =>
+                void updateActivePlatformSendBehavior(event.target.value as PlatformSendBehavior)
+              }
+            >
+              <option value="autoSubmit">Auto-send</option>
+              <option value="draftOnly">Draft only</option>
+              <option value="pasteOnly">Paste only</option>
+              <option value="openSidePanelFirst">Open side panel first</option>
             </select>
           </label>
           <label>

@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createDefaultAppState } from "../domain/defaults";
-import { resolveSendMode } from "../domain/sendPolicy";
+import { resolveSendMode, sendBehaviorStatusLabel } from "../domain/sendPolicy";
 import { sidePanelPortName } from "../background/promptRouter";
 import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
@@ -176,7 +176,7 @@ function SidePanelApp() {
     }
 
     const requestId = `prompt-${Date.now()}-${requestCounterRef.current++}`;
-    setStatus(sendMode === "draftOnly" ? "Drafting prompt..." : "Sending prompt...");
+    setStatus(sendMode === "draftOnly" ? `${sendBehaviorStatusLabel(activePlatform)}...` : "Sending prompt...");
     inflightPromptsRef.current.set(requestId, pendingPrompt);
 
     iframeRef.current.contentWindow.postMessage(
@@ -198,6 +198,7 @@ function SidePanelApp() {
     pendingPrompt,
     platformMessageOrigin,
     sendMode,
+    activePlatform,
   ]);
 
   return (

@@ -5,6 +5,7 @@ export type PlatformId = string;
 export type ActionType = "local" | "prompt" | "inputPrompt" | "panel";
 export type ActionButtonStyle = "iconOnly" | "iconText";
 export type PlatformType = "aiChat" | "messaging";
+export type PlatformSendBehavior = "autoSubmit" | "draftOnly" | "pasteOnly" | "openSidePanelFirst";
 export type ResponseLanguage = "auto" | string;
 
 export interface Scenario {
@@ -36,6 +37,7 @@ export interface ChatPlatform {
   type: PlatformType;
   url: string;
   hostPattern: string;
+  sendBehavior: PlatformSendBehavior;
 }
 
 export interface UserSettings {

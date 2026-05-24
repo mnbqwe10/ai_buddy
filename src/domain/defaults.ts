@@ -513,6 +513,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "aiChat",
     url: "https://chatgpt.com/",
     hostPattern: "https://chatgpt.com/*",
+    sendBehavior: "autoSubmit",
   },
   {
     id: "claude",
@@ -520,6 +521,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "aiChat",
     url: "https://claude.ai/new",
     hostPattern: "https://claude.ai/*",
+    sendBehavior: "autoSubmit",
   },
   {
     id: "gemini",
@@ -527,6 +529,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "aiChat",
     url: "https://gemini.google.com/app",
     hostPattern: "https://gemini.google.com/*",
+    sendBehavior: "autoSubmit",
   },
   {
     id: "deepseek",
@@ -534,6 +537,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "aiChat",
     url: "https://chat.deepseek.com/",
     hostPattern: "https://chat.deepseek.com/*",
+    sendBehavior: "autoSubmit",
   },
   {
     id: "whatsapp",
@@ -541,6 +545,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "messaging",
     url: "https://web.whatsapp.com/",
     hostPattern: "https://web.whatsapp.com/*",
+    sendBehavior: "draftOnly",
   },
   {
     id: "telegram",
@@ -548,6 +553,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "messaging",
     url: "https://web.telegram.org/",
     hostPattern: "https://web.telegram.org/*",
+    sendBehavior: "draftOnly",
   },
   {
     id: "discord",
@@ -555,6 +561,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "messaging",
     url: "https://discord.com/channels/@me",
     hostPattern: "https://discord.com/*",
+    sendBehavior: "draftOnly",
   },
   {
     id: "copilot",
@@ -562,6 +569,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     type: "aiChat",
     url: "https://copilot.microsoft.com/",
     hostPattern: "https://copilot.microsoft.com/*",
+    sendBehavior: "autoSubmit",
   },
 ];
 

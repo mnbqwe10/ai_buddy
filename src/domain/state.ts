@@ -12,6 +12,7 @@ import type {
   AppState,
   ChatPlatform,
   PlatformType,
+  PlatformSendBehavior,
   Scenario,
   UserSettings,
 } from "./model";
@@ -32,6 +33,12 @@ function knownIds<T extends { id: string }>(items: T[]): Set<string> {
 const actionTypes = new Set<ActionType>(["local", "prompt", "inputPrompt", "panel"]);
 const actionButtonStyles = new Set<ActionButtonStyle>(["iconOnly", "iconText"]);
 const platformTypes = new Set<PlatformType>(["aiChat", "messaging"]);
+const platformSendBehaviors = new Set<PlatformSendBehavior>([
+  "autoSubmit",
+  "draftOnly",
+  "pasteOnly",
+  "openSidePanelFirst",
+]);
 const maxPinnedActions = 3;
 const legacyIconTextByName: Record<string, string> = {
   "Cp": "copy",
@@ -142,8 +149,15 @@ function normalizeScenario(rawScenario: Partial<Scenario>, defaultScenario?: Sce
 }
 
 function normalizePlatform(rawPlatform: Partial<ChatPlatform>, defaultPlatform?: ChatPlatform): ChatPlatform {
+  const rawSendBehavior = rawPlatform.sendBehavior as PlatformSendBehavior | undefined;
   if (defaultPlatform) {
-    return structuredClone(defaultPlatform);
+    return {
+      ...structuredClone(defaultPlatform),
+      sendBehavior:
+        rawSendBehavior && platformSendBehaviors.has(rawSendBehavior)
+          ? rawSendBehavior
+          : defaultPlatform.sendBehavior,
+    };
   }
 
   const fallback = defaultPlatforms[0];
@@ -168,6 +182,12 @@ function normalizePlatform(rawPlatform: Partial<ChatPlatform>, defaultPlatform?:
       typeof rawPlatform.hostPattern === "string" && rawPlatform.hostPattern.trim()
         ? rawPlatform.hostPattern
         : fallback.hostPattern,
+    sendBehavior:
+      rawSendBehavior && platformSendBehaviors.has(rawSendBehavior)
+        ? rawSendBehavior
+        : rawType === "messaging"
+          ? "draftOnly"
+          : fallback.sendBehavior,
   };
 }
 

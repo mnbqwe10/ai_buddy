@@ -188,14 +188,24 @@ describe("send policy", () => {
     expect(resolveSendMode({ platform: chatgpt })).toBe("autoSubmit");
   });
 
+  it("respects draft-only AI Chat Platform profiles", () => {
+    const state = createDefaultAppState();
+    const chatgpt = state.platforms.find((platform) => platform.id === "chatgpt")!;
+
+    expect(resolveSendMode({ platform: { ...chatgpt, sendBehavior: "draftOnly" } })).toBe("draftOnly");
+    expect(resolveSendMode({ platform: { ...chatgpt, sendBehavior: "pasteOnly" } })).toBe("draftOnly");
+    expect(resolveSendMode({ platform: { ...chatgpt, sendBehavior: "openSidePanelFirst" } })).toBe("draftOnly");
+  });
+
   it("drafts on Messaging Platforms unless Allow Auto-Send is enabled", () => {
     const state = createDefaultAppState();
     const whatsapp = state.platforms.find((platform) => platform.id === "whatsapp")!;
 
     expect(resolveSendMode({ platform: whatsapp })).toBe("draftOnly");
+    expect(resolveSendMode({ platform: whatsapp, allowAutoSend: true })).toBe("draftOnly");
     expect(
       resolveSendMode({
-        platform: whatsapp,
+        platform: { ...whatsapp, sendBehavior: "autoSubmit" },
         allowAutoSend: true,
       }),
     ).toBe("autoSubmit");

@@ -56,6 +56,7 @@ describe("starter defaults", () => {
       name: "Microsoft Copilot",
       url: "https://copilot.microsoft.com/",
       hostPattern: "https://copilot.microsoft.com/*",
+      sendBehavior: "autoSubmit",
     });
     expect(state.actions.find((action) => action.id === "translate")?.config?.translationTargetLanguage).toBe(
       defaultTranslationTargetLanguage,
@@ -135,6 +136,7 @@ describe("starter defaults", () => {
               name: "Microsoft 365 Copilot",
               url: "https://m365.cloud.microsoft/chat",
               hostPattern: "https://m365.cloud.microsoft/*",
+              sendBehavior: "draftOnly" as const,
             }
           : platform,
       ),
@@ -148,6 +150,7 @@ describe("starter defaults", () => {
       name: "Microsoft Copilot",
       url: "https://copilot.microsoft.com/",
       hostPattern: "https://copilot.microsoft.com/*",
+      sendBehavior: "draftOnly",
     });
     expect(legacy.settings.activePlatformId).toBe("copilot");
   });
