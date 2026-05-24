@@ -28,8 +28,26 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command === "toggle-sidebar") {
+  if (command === "open-side-panel") {
     openSidePanel({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+  }
+
+  if (command === "open-toolbar") {
+    void sendMessageToActiveTab({ type: "open-toolbar-for-selection" }).catch((error) => {
+      console.warn("[AI Buddy] Unable to open toolbar", error);
+    });
+  }
+
+  if (command === "capture-screenshot") {
+    void sendMessageToActiveTab({ type: "start-screenshot-capture" }).catch((error) => {
+      console.warn("[AI Buddy] Unable to start screenshot capture", error);
+    });
+  }
+
+  if (command === "toggle-toolbar-enabled") {
+    void toggleToolbarEnabled().catch((error) => {
+      console.warn("[AI Buddy] Unable to toggle toolbar", error);
+    });
   }
 
   if (command === "cycle-scenario") {
@@ -39,6 +57,15 @@ chrome.commands.onCommand.addListener((command) => {
   }
 });
 
+async function sendMessageToActiveTab(message: RuntimeMessage) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (typeof tab?.id !== "number") {
+    return;
+  }
+
+  await chrome.tabs.sendMessage(tab.id, message);
+}
+
 async function cycleActiveScenario() {
   const state = await getAppState();
   await saveAppState({
@@ -46,6 +73,17 @@ async function cycleActiveScenario() {
     settings: {
       ...state.settings,
       activeScenarioId: nextScenarioId(state),
+    },
+  });
+}
+
+async function toggleToolbarEnabled() {
+  const state = await getAppState();
+  await saveAppState({
+    ...state,
+    settings: {
+      ...state.settings,
+      toolbarEnabled: !state.settings.toolbarEnabled,
     },
   });
 }

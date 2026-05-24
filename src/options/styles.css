@@ -154,9 +154,48 @@ p {
   gap: 8px;
 }
 
-.pinned-actions-editor h3 {
+.pinned-actions-editor h3,
+.shortcut-editor h3 {
   margin: 0 0 3px;
   font-size: 15px;
+}
+
+.shortcut-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.shortcut-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.shortcut-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e2e7f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.shortcut-row kbd {
+  border: 1px solid #d6dbe6;
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: #f7f8fb;
+  color: #172033;
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  white-space: nowrap;
 }
 
 .pinned-action-add {

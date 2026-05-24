@@ -29,6 +29,7 @@ export interface ScreenshotCaptureRegion {
 
 export type RuntimeMessage =
   | { type: "open-side-panel" }
+  | { type: "open-toolbar-for-selection" }
   | { type: "start-screenshot-capture" }
   | { type: "prompt-action-request"; prompt: PendingPrompt }
   | { type: "capture-screenshot-region"; region: ScreenshotCaptureRegion }

@@ -76,18 +76,35 @@
     }
   ],
   "commands": {
-    "toggle-sidebar": {
+    "open-toolbar": {
       "suggested_key": {
-        "default": "Ctrl+Space",
-        "mac": "Command+Space"
+        "default": "Alt+Shift+A",
+        "mac": "Alt+Shift+A"
+      },
+      "description": "Open AI Buddy toolbar for the current selection"
+    },
+    "capture-screenshot": {
+      "suggested_key": {
+        "default": "Alt+Shift+X",
+        "mac": "Alt+Shift+X"
+      },
+      "description": "Start AI Buddy screenshot capture"
+    },
+    "toggle-toolbar-enabled": {
+      "suggested_key": {
+        "default": "Alt+Shift+E",
+        "mac": "Alt+Shift+E"
+      },
+      "description": "Enable or disable AI Buddy toolbar"
+    },
+    "open-side-panel": {
+      "suggested_key": {
+        "default": "Alt+Shift+B",
+        "mac": "Alt+Shift+B"
       },
       "description": "Open AI Buddy side panel"
     },
     "cycle-scenario": {
-      "suggested_key": {
-        "default": "Alt+Shift+S",
-        "mac": "Command+Shift+S"
-      },
       "description": "Cycle AI Buddy Scenario"
     }
   }

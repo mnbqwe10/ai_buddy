@@ -17,6 +17,20 @@ import "./styles.css";
 type ScenarioDraft = Pick<Scenario, "id" | "name" | "color" | "actionIds">;
 const maxPinnedActions = 3;
 
+interface ShortcutCommand {
+  name?: string;
+  description?: string;
+  shortcut?: string;
+}
+
+const shortcutLabels: Record<string, string> = {
+  "open-toolbar": "Open Toolbar",
+  "capture-screenshot": "Screenshot",
+  "toggle-toolbar-enabled": "Enable or Disable Toolbar",
+  "open-side-panel": "Open Side Panel",
+  "cycle-scenario": "Cycle Scenario",
+};
+
 interface ActionDraft {
   id: string;
   name: string;
@@ -280,6 +294,7 @@ function OptionsApp() {
   const [scenarioDraft, setScenarioDraft] = useState<ScenarioDraft | null>(null);
   const [actionDraft, setActionDraft] = useState<ActionDraft | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const [shortcutCommands, setShortcutCommands] = useState<ShortcutCommand[]>([]);
 
   const activeScenario = state?.scenarios.find(
     (scenario) => scenario.id === state.settings.activeScenarioId,
@@ -335,6 +350,16 @@ function OptionsApp() {
     selectedAction?.instruction,
     selectedAction?.config?.translationTargetLanguage,
   ]);
+
+  useEffect(() => {
+    if (!chrome.commands?.getAll) {
+      return;
+    }
+
+    chrome.commands.getAll((commands) => {
+      setShortcutCommands(commands);
+    });
+  }, []);
 
   if (isLoading || !state) {
     return <main className="options-shell">Loading...</main>;
@@ -540,6 +565,16 @@ function OptionsApp() {
     });
   }
 
+  function openShortcutSettings() {
+    const url = "chrome://extensions/shortcuts";
+    if (chrome.tabs?.create) {
+      chrome.tabs.create({ url });
+      return;
+    }
+
+    window.open(url, "_blank", "noopener");
+  }
+
   const pinnedActionIds = state.settings.pinnedActionIds;
   const availablePinnedActions = state.actions.filter((action) => !pinnedActionIds.includes(action.id));
 
@@ -657,6 +692,27 @@ function OptionsApp() {
           />
           <small>Included at the beginning of every prompt. Keep it short and preference-focused.</small>
         </label>
+        <div className="shortcut-editor">
+          <div className="shortcut-editor-header">
+            <div>
+              <h3>Keyboard Shortcuts</h3>
+              <small>Chrome manages shortcut editing.</small>
+            </div>
+            <button type="button" className="secondary-button" onClick={openShortcutSettings}>
+              Edit shortcuts
+            </button>
+          </div>
+          <div className="shortcut-list">
+            {shortcutCommands
+              .filter((command) => command.name && shortcutLabels[command.name])
+              .map((command) => (
+                <div className="shortcut-row" key={command.name}>
+                  <span>{shortcutLabels[command.name!]}</span>
+                  <kbd>{command.shortcut || "Not assigned"}</kbd>
+                </div>
+              ))}
+          </div>
+        </div>
         <div className="pinned-actions-editor">
           <div>
             <h3>Pinned Actions</h3>
