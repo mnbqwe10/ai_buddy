@@ -160,6 +160,16 @@ function injectStyles() {
       position: relative;
     }
 
+    #${rootId} .ai-buddy-more::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 100%;
+      display: none;
+      width: max(100%, 150px);
+      height: 6px;
+    }
+
     #${rootId} .ai-buddy-menu {
       position: absolute;
       right: 0;
@@ -179,6 +189,11 @@ function injectStyles() {
     #${rootId} .ai-buddy-more:hover .ai-buddy-menu {
       display: grid;
       gap: 5px;
+    }
+
+    #${rootId} .ai-buddy-more:hover::after,
+    #${rootId} .ai-buddy-more:focus-within::after {
+      display: block;
     }
 
     #${rootId} .ai-buddy-menu button {
