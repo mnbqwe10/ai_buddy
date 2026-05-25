@@ -842,17 +842,26 @@ h1 {
 }
 
 .demo-card img,
-.demo-card video {
+.demo-card video,
+.demo-card iframe {
   width: 100%;
   aspect-ratio: 16 / 10;
   border-bottom: 1px solid var(--line);
   background: #05070d;
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
   object-fit: cover;
   object-position: top center;
 }
 
+.demo-card iframe {
+  display: block;
+}
+
 .demo-wide img,
-.demo-wide video {
+.demo-wide video,
+.demo-wide iframe {
   aspect-ratio: 16 / 8;
 }
 

@@ -14,6 +14,12 @@
 
 ## 演示视频
 
+### 官方 YouTube 演示
+
+<a href="https://www.youtube.com/watch?v=jHOy0jOBgco">
+  <img src="https://img.youtube.com/vi/jHOy0jOBgco/hqdefault.jpg" alt="在 YouTube 观看 AI Buddy 官方演示" width="720">
+</a>
+
 <video src="ai_buddy_demo.webm" poster="screenshot1.png" controls muted playsinline>
   <a href="ai_buddy_demo.webm">观看选中文本工具栏演示</a>
 </video>

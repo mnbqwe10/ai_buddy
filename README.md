@@ -16,6 +16,12 @@ Capture part of the current page, add a short instruction, and send the screensh
 
 ## Demo Videos
 
+### Official YouTube Demo
+
+<a href="https://www.youtube.com/watch?v=jHOy0jOBgco">
+  <img src="https://img.youtube.com/vi/jHOy0jOBgco/hqdefault.jpg" alt="Watch the official AI Buddy demo on YouTube" width="720">
+</a>
+
 <video src="docs/ai_buddy_demo.webm" poster="docs/screenshot1.png" controls muted playsinline>
   <a href="docs/ai_buddy_demo.webm">Watch the selection toolbar demo</a>
 </video>
