@@ -854,7 +854,7 @@ h1 {
 .demo-youtube {
   grid-column: 1 / -1;
   justify-self: center;
-  width: min(100%, 1024px);
+  width: min(100%, 1120px);
 }
 
 .youtube-frame {
