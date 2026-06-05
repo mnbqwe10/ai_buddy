@@ -58,6 +58,12 @@ describe("starter defaults", () => {
       hostPattern: "https://copilot.microsoft.com/*",
       sendBehavior: "autoSubmit",
     });
+    expect(state.platforms.find((platform) => platform.id === "telegram")).toMatchObject({
+      name: "Telegram Web",
+      url: "https://web.telegram.org/a/",
+      hostPattern: "https://web.telegram.org/*",
+      sendBehavior: "draftOnly",
+    });
     expect(state.actions.find((action) => action.id === "translate")?.config?.translationTargetLanguage).toBe(
       defaultTranslationTargetLanguage,
     );

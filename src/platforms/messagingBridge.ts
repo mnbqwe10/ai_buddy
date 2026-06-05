@@ -668,4 +668,8 @@ window.addEventListener("message", (event) => {
   void handleBridgeMessage(event);
 });
 
+if (window.parent !== window) {
+  window.parent.postMessage({ source: bridgeSource, type: "bridge-ready" }, "*");
+}
+
 export {};

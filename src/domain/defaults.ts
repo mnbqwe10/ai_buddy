@@ -551,7 +551,7 @@ export const defaultPlatforms: ChatPlatform[] = [
     id: "telegram",
     name: "Telegram Web",
     type: "messaging",
-    url: "https://web.telegram.org/",
+    url: "https://web.telegram.org/a/",
     hostPattern: "https://web.telegram.org/*",
     sendBehavior: "draftOnly",
   },
