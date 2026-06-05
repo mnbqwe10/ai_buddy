@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { platformFrameRules } from "./platformFrameRules";
 
 describe("platform frame rules", () => {
@@ -53,5 +55,35 @@ describe("platform frame rules", () => {
         resourceTypes: ["sub_frame"],
       },
     });
+  });
+
+  it("ships a static Telegram frame rule before the background worker starts", () => {
+    const root = process.cwd();
+    const manifest = JSON.parse(readFileSync(resolve(root, "public/manifest.json"), "utf8"));
+    const ruleset = manifest.declarative_net_request.rule_resources.find(
+      (resource: { id: string }) => resource.id === "platform_frame_rules",
+    );
+    const rules = JSON.parse(readFileSync(resolve(root, "public", ruleset.path), "utf8"));
+
+    expect(ruleset).toMatchObject({
+      enabled: true,
+      path: "platform-frame-rules.json",
+    });
+    expect(rules).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: expect.objectContaining({
+            responseHeaders: expect.arrayContaining([
+              { header: "content-security-policy", operation: "remove" },
+              { header: "x-frame-options", operation: "remove" },
+            ]),
+          }),
+          condition: {
+            urlFilter: "https://web.telegram.org/*",
+            resourceTypes: ["sub_frame"],
+          },
+        }),
+      ]),
+    );
   });
 });
