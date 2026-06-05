@@ -32,5 +32,6 @@ export type RuntimeMessage =
   | { type: "start-screenshot-capture" }
   | { type: "prompt-action-request"; prompt: PendingPrompt }
   | { type: "capture-screenshot-region"; region: ScreenshotCaptureRegion }
+  | { type: "prepare-telegram-frame" }
   | { type: "claim-pending-prompt" }
   | { type: "deliver-prompt"; prompt: PendingPrompt };

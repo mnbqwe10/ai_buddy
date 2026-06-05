@@ -9,21 +9,21 @@ const promptRouter = createPromptRouter();
 
 function installPlatformFrameRules() {
   const rules = platformFrameRules();
-  void chrome.declarativeNetRequest
-    .updateDynamicRules({
-      addRules: rules,
-      removeRuleIds: rules.map((rule) => rule.id),
-    })
-    .catch((error) => {
-      console.warn("[AI Buddy] Unable to install platform frame rules", error);
-    });
+  return chrome.declarativeNetRequest.updateDynamicRules({
+    addRules: rules,
+    removeRuleIds: rules.map((rule) => rule.id),
+  });
 }
 
-installPlatformFrameRules();
+void installPlatformFrameRules().catch((error) => {
+  console.warn("[AI Buddy] Unable to install platform frame rules", error);
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   ensureAppState();
-  installPlatformFrameRules();
+  void installPlatformFrameRules().catch((error) => {
+    console.warn("[AI Buddy] Unable to install platform frame rules", error);
+  });
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });
 
@@ -111,6 +111,17 @@ async function captureScreenshotRegion(message: Extract<RuntimeMessage, { type: 
 chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendResponse) => {
   if (!message) {
     return;
+  }
+
+  if (message.type === "prepare-telegram-frame") {
+    void installPlatformFrameRules()
+      .then(() => sendResponse({ ok: true }))
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn("[AI Buddy] Unable to prepare Telegram frame", error);
+        sendResponse({ ok: false, error: errorMessage });
+      });
+    return true;
   }
 
   if (message.type === "open-side-panel") {

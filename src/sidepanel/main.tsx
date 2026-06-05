@@ -31,6 +31,7 @@ function SidePanelApp() {
   const [isIframeReady, setIsIframeReady] = useState(false);
   const [isBridgeReady, setIsBridgeReady] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<PendingPrompt | null>(null);
+  const [isPlatformFramePrepared, setIsPlatformFramePrepared] = useState(true);
   const effectiveState = state ?? createDefaultAppState();
 
   const activeScenario =
@@ -127,6 +128,13 @@ function SidePanelApp() {
     setIsIframeReady(false);
     setIsBridgeReady(false);
     setStatus(`Loading ${activePlatform.name}...`);
+    setIsPlatformFramePrepared(activePlatform.id !== "telegram");
+
+    if (activePlatform.id === "telegram" && typeof chrome !== "undefined") {
+      chrome.runtime.sendMessage({ type: "prepare-telegram-frame" }, () => {
+        setIsPlatformFramePrepared(true);
+      });
+    }
   }, [activePlatform.id, activePlatform.name]);
 
   useEffect(() => {
@@ -259,7 +267,7 @@ function SidePanelApp() {
       </section>
 
       <section className="chat-frame-panel" data-platform-id={activePlatform.id}>
-        {canUseBridge ? (
+        {canUseBridge && isPlatformFramePrepared ? (
           <iframe
             ref={iframeRef}
             title={activePlatform.name}
@@ -272,6 +280,10 @@ function SidePanelApp() {
               pingBridge();
             }}
           />
+        ) : canUseBridge ? (
+          <div className="chat-frame-placeholder">
+            <p>Preparing {activePlatform.name}...</p>
+          </div>
         ) : (
           <div className="chat-frame-placeholder">
             <p>{activePlatform.name} adapter will be connected in a later slice.</p>
