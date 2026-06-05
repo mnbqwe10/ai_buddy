@@ -307,6 +307,7 @@ describe("messaging bridge", () => {
     });
     composer.addEventListener("keydown", (event) => {
       if ((event as KeyboardEvent).key === "Enter") {
+        event.preventDefault();
         enterSend();
       }
     });
@@ -318,6 +319,32 @@ describe("messaging bridge", () => {
     expect(result).toEqual({ ok: true, mode: "sent" });
     expect(enterSend).toHaveBeenCalledTimes(1);
     expect(composer.textContent).toBe("");
+  });
+
+  it("does not report Discord Slate prompts as sent when Enter is not handled", async () => {
+    const composer = createDiscordSlateComposer();
+
+    const enterSeen = vi.fn();
+    composer.addEventListener("paste", (event) => {
+      event.preventDefault();
+      composer.textContent = event.clipboardData?.getData("text/plain") ?? "";
+    });
+    composer.addEventListener("keydown", (event) => {
+      if ((event as KeyboardEvent).key === "Enter") {
+        enterSeen();
+      }
+    });
+
+    document.body.append(composer);
+
+    const result = await injectPrompt("Do not fake Discord send", true);
+
+    expect(result).toEqual({
+      ok: false,
+      error: "Message drafted, but the chat platform did not accept the send action.",
+    });
+    expect(enterSeen).toHaveBeenCalledTimes(1);
+    expect(composer.textContent).toBe("Do not fake Discord send");
   });
 
   it("uses WhatsApp's footer composer instead of other visible textboxes", async () => {

@@ -413,19 +413,20 @@ async function waitForSendButton(doc = document) {
 
 function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
   composer.focus();
+  let wasCanceled = false;
   for (const type of ["keydown", "keypress", "keyup"]) {
-    composer.dispatchEvent(
-      new KeyboardEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        key: "Enter",
-        code: "Enter",
-        keyCode: 13,
-        which: 13,
-        charCode: type === "keypress" ? 13 : 0,
-      }),
-    );
+    const event = new KeyboardEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      key: "Enter",
+      code: "Enter",
+      keyCode: 13,
+      which: 13,
+      charCode: type === "keypress" ? 13 : 0,
+    });
+    wasCanceled = !composer.dispatchEvent(event) || wasCanceled;
   }
+  return wasCanceled;
 }
 
 function whatsappSendControl(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
@@ -537,10 +538,17 @@ async function submitComposer(
   promptText: string,
 ) {
   if (composer instanceof HTMLElement && composerIsSlateEditor(composer)) {
-    dispatchEnter(composer);
-    await delay(sendButtonPollMs);
-    clearStaleComposerDom(composer, promptText);
-    return true;
+    const handledEnter = dispatchEnter(composer);
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+
+    if (handledEnter) {
+      clearStaleComposerDom(composer, promptText);
+      return true;
+    }
+
+    return false;
   }
 
   if (composerIsWhatsAppComposer(composer)) {
