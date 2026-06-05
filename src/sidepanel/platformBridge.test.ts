@@ -4,6 +4,7 @@ import { bridgeSourceForPlatform } from "./platformBridge";
 describe("platform bridge source", () => {
   it("uses a dedicated bridge source for Copilot", () => {
     expect(bridgeSourceForPlatform("copilot", "aiChat")).toBe("ai-buddy-copilot-bridge");
+    expect(bridgeSourceForPlatform("copilotEnterprise", "aiChat")).toBe("ai-buddy-copilot-bridge");
   });
 
   it("uses shared bridge sources for other platform types", () => {

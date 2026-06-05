@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Buddy",
   "version": "1.2.1",
-  "version_name": "1.2.1-dev3",
+  "version_name": "1.2.1-dev4",
   "description": "Scenario-based AI sidebar actions for selected browser text.",
   "icons": {
     "64": "logo.png"
@@ -23,7 +23,8 @@
     "https://web.whatsapp.com/*",
     "https://web.telegram.org/*",
     "https://discord.com/*",
-    "https://copilot.microsoft.com/*"
+    "https://copilot.microsoft.com/*",
+    "https://m365.cloud.microsoft/*"
   ],
   "background": {
     "service_worker": "assets/background.js",
@@ -60,7 +61,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://copilot.microsoft.com/*"],
+      "matches": ["https://copilot.microsoft.com/*", "https://m365.cloud.microsoft/*"],
       "js": ["assets/copilotBridge.js"],
       "all_frames": true,
       "run_at": "document_idle"

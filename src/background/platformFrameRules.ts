@@ -11,6 +11,7 @@ const frameRuleUrls = [
   "https://gemini.google.com/*",
   "https://chat.deepseek.com/*",
   "https://copilot.microsoft.com/*",
+  "https://m365.cloud.microsoft/*",
   "https://web.whatsapp.com/*",
   "https://web.telegram.org/*",
   "https://discord.com/*",

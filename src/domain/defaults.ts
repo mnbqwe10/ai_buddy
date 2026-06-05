@@ -571,6 +571,14 @@ export const defaultPlatforms: ChatPlatform[] = [
     hostPattern: "https://copilot.microsoft.com/*",
     sendBehavior: "autoSubmit",
   },
+  {
+    id: "copilotEnterprise",
+    name: "Microsoft Copilot Enterprise",
+    type: "aiChat",
+    url: "https://m365.cloud.microsoft/chat",
+    hostPattern: "https://m365.cloud.microsoft/*",
+    sendBehavior: "autoSubmit",
+  },
 ];
 
 export function createDefaultSettings(): UserSettings {

@@ -19,6 +19,18 @@ describe("platform frame rules", () => {
             resourceTypes: ["main_frame", "sub_frame"],
           }),
         }),
+        expect.objectContaining({
+          action: expect.objectContaining({
+            responseHeaders: expect.arrayContaining([
+              { header: "content-security-policy", operation: "remove" },
+              { header: "x-frame-options", operation: "remove" },
+            ]),
+          }),
+          condition: expect.objectContaining({
+            urlFilter: "https://m365.cloud.microsoft/*",
+            resourceTypes: ["main_frame", "sub_frame"],
+          }),
+        }),
       ]),
     );
   });

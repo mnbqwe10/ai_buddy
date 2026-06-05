@@ -51,11 +51,18 @@ describe("starter defaults", () => {
       "telegram",
       "discord",
       "copilot",
+      "copilotEnterprise",
     ]);
     expect(state.platforms.find((platform) => platform.id === "copilot")).toMatchObject({
       name: "Microsoft Copilot",
       url: "https://copilot.microsoft.com/",
       hostPattern: "https://copilot.microsoft.com/*",
+      sendBehavior: "autoSubmit",
+    });
+    expect(state.platforms.find((platform) => platform.id === "copilotEnterprise")).toMatchObject({
+      name: "Microsoft Copilot Enterprise",
+      url: "https://m365.cloud.microsoft/chat",
+      hostPattern: "https://m365.cloud.microsoft/*",
       sendBehavior: "autoSubmit",
     });
     expect(state.platforms.find((platform) => platform.id === "telegram")).toMatchObject({

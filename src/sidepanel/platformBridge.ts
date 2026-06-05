@@ -1,5 +1,5 @@
 export function bridgeSourceForPlatform(platformId: string, platformType: string) {
-  if (platformId === "copilot") {
+  if (platformId === "copilot" || platformId === "copilotEnterprise") {
     return "ai-buddy-copilot-bridge";
   }
 
