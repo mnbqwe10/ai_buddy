@@ -25,7 +25,11 @@ Prefer focused tests around deep modules such as Scenario normalization, Action 
 
 The extension history mostly follows Conventional Commits, for example `feat(sidepanel): add in-panel platform switcher` and `fix(toolbar): open sidebar before sending prompts`. Use `type(scope): summary` with scopes matching touched areas such as `toolbar`, `popup`, `options`, `sidepanel`, or `platforms`.
 
+Agents must not commit or push immediately after changing code. First finish the requested edits and verification, then wait for the user to manually verify the result and explicitly approve committing and pushing.
+
 Pull requests should describe user-visible behavior, list tested Chrome pages or Node test commands, and include screenshots or short recordings for UI changes. Link related issues when available and call out any new host permissions or security-sensitive manifest changes.
+
+When preparing a new release, keep the generated release ZIP file under the root `releases/` folder.
 
 ## Security & Configuration Tips
 
