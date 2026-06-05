@@ -26,7 +26,7 @@
 
 AI Buddy 是一个 Chrome 扩展，会在网页选中文本后显示快捷工具栏，帮助你把选中的内容发送到 AI 聊天平台。它会在 Chrome 侧边栏中打开目标平台，并提供 Explain、Translate、Summarize、Draft Reply、Polish、Brainstorm、Visualize 等可复用场景动作。
 
-## v1.2.0 新功能
+## v1.2.2 新功能
 
 - 默认场景扩展到 10 个：Learning、Workplace、Creative、Research、Writing、Coding、Marketing & Sales、Customer Support、Data Analysis 和 Planning。
 - 新增全局指令、置顶常用动作，以及 **Transform** 菜单，可把选中文本转换成推文、表格、思维导图、Mermaid 图、清单、测验、闪卡或用户故事。
@@ -34,6 +34,9 @@ AI Buddy 是一个 Chrome 扩展，会在网页选中文本后显示快捷工具
 - 发送前会提示可能的敏感数据，例如邮箱、电话号码、API key、街道地址和金融号码。
 - 新增快捷键：启用/禁用工具栏、打开侧边栏、截图、切换到下一个场景。可在选项页查看并跳转到 Chrome 快捷键设置。
 - 新增设置导入/导出，以及每个平台的发送行为配置，例如自动发送、只草拟、只粘贴、先打开侧边栏。
+- 侧边栏新增 **Send Behavior**，可以在发送提示词的位置直接查看和切换当前平台的发送方式。
+- 简化消息平台自动发送逻辑：ChatGPT、Claude、Gemini、DeepSeek、Copilot、WhatsApp、Telegram 和 Discord 都统一使用 **Send Behavior** 作为发送行为的唯一配置。
+- 加强 Telegram Web 当前发送按钮结构的识别能力。
 
 ## 重要说明
 
@@ -67,13 +70,13 @@ AI Buddy 是一个 Chrome 扩展，会在网页选中文本后显示快捷工具
 2. 选择当前 **Scenario**、**Chat Platform** 和 **Response Language**。
 3. 保持选择工具栏开启。
 4. 打开普通网页，选中文字，然后点击 **Explain** 或 **Translate** 等动作按钮。
-5. AI Buddy 会打开侧边栏，生成提示词，并在 AI 聊天平台中自动发送。
+5. AI Buddy 会打开侧边栏，生成提示词，并根据当前平台的 **Send Behavior** 自动发送或保留为草稿。
 
-WhatsApp、Telegram 和 Discord 等消息平台默认只会草拟提示词；只有在侧边栏中打开 **Allow auto-send** 后才会自动发送。
+WhatsApp、Telegram 和 Discord 等消息平台默认使用 **Draft only**。如果你希望 AI Buddy 自动提交提示词，可以在侧边栏或选项页把 **Send Behavior** 改为 **Auto-send**。
 
 ## 自定义
 
-打开扩展选项页即可管理偏好设置、场景、可复用动作、置顶动作、平台发送行为、全局指令和设置导入/导出。场景中的动作顺序会决定工具栏中的按钮顺序。编辑一个可复用动作后，所有使用该动作的场景都会同步更新。
+侧边栏提供日常使用的 Platform、Send Behavior 和 Scenario 控制。打开扩展选项页即可管理偏好设置、场景、可复用动作、置顶动作、平台发送行为、全局指令和设置导入/导出。场景中的动作顺序会决定工具栏中的按钮顺序。编辑一个可复用动作后，所有使用该动作的场景都会同步更新。
 
 ## 快捷键
 

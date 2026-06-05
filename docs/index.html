@@ -6,12 +6,12 @@
     <title>AI Buddy - Chrome extension for screenshot, shortcuts, and AI workflows</title>
     <meta
       name="description"
-      content="AI Buddy is a Chrome extension that turns selected page text and annotated screenshots into reusable prompts, keyboard shortcuts, and AI workflows in Chrome's side panel."
+      content="AI Buddy is a Chrome extension that turns selected page text and annotated screenshots into reusable prompts, keyboard shortcuts, platform send behavior, and AI workflows in Chrome's side panel."
     >
     <meta property="og:title" content="AI Buddy - Chrome extension">
     <meta
       property="og:description"
-      content="Capture screenshots or select text, choose an AI action, and continue the conversation in Chrome's side panel."
+      content="Capture screenshots or select text, choose an AI action, and control prompt sending from Chrome's side panel."
     >
     <meta property="og:image" content="https://mnbqwe10.github.io/ai_buddy/banner_dark.png">
     <meta property="og:url" content="https://mnbqwe10.github.io/ai_buddy/">
@@ -56,7 +56,7 @@
           <h1 id="hero-title">Send annotated screenshots and page context to AI chat.</h1>
           <p class="hero-lede">
             Capture part of a webpage or highlight text, choose a reusable action, and send a polished
-            prompt to your preferred AI chat platform with shortcuts, safety checks, and workflow profiles.
+            prompt to your preferred chat platform with shortcuts, safety checks, and per-platform Send Behavior.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
             <a
@@ -262,8 +262,8 @@
           <h2 id="platform-title">Use the AI and messaging tools you already trust.</h2>
           <p>
             AI Buddy supports ChatGPT, Claude, Gemini, DeepSeek, and Microsoft Copilot for AI chat.
-            Messaging destinations such as WhatsApp Web, Telegram Web, and Discord are handled as drafts
-            so you can review before sending.
+            Messaging destinations such as WhatsApp Web, Telegram Web, and Discord default to Draft only,
+            and can be switched to Auto-send from Send Behavior in the side panel or Options page.
           </p>
         </div>
         <div class="platform-list" aria-label="Supported platform list">
@@ -298,11 +298,11 @@
 
       <section class="section release-section" aria-labelledby="release-title">
         <div class="section-heading">
-          <p class="eyebrow">New in v1.2</p>
+          <p class="eyebrow">New in v1.2.2</p>
           <h2 id="release-title">More control for daily AI workflows.</h2>
           <p>
-            AI Buddy now includes deeper Scenario coverage, safer sending, faster shortcuts, and portable
-            settings while keeping the same lightweight toolbar model.
+            AI Buddy now keeps sending mode visible in the side panel, simplifies messaging auto-send,
+            and keeps the same lightweight toolbar model for repeated browser workflows.
           </p>
         </div>
         <div class="feature-grid">
@@ -346,6 +346,16 @@
             <h3>Platform profiles</h3>
             <p>Choose auto-send, draft-only, paste-only, or open-side-panel-first behavior for each Chat Platform.</p>
           </article>
+          <article class="feature-card">
+            <span class="feature-icon">SB</span>
+            <h3>Side panel Send Behavior</h3>
+            <p>Switch a platform between Auto-send and Draft only beside the chat frame, without a separate auto-send toggle.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">TG</span>
+            <h3>Telegram send hardening</h3>
+            <p>Improved Telegram Web send-control detection for current button markup.</p>
+          </article>
         </div>
       </section>
 
@@ -382,7 +392,7 @@
           <article class="feature-card">
             <span class="feature-icon">C</span>
             <h3>Side panel context</h3>
-            <p>Keep the source page visible while the generated prompt opens beside it.</p>
+            <p>Keep the source page visible while the generated prompt opens beside it, with Platform, Send Behavior, and Scenario controls in one place.</p>
           </article>
           <article class="feature-card">
             <span class="feature-icon">M</span>
@@ -497,7 +507,7 @@
           <article>
             <span>2</span>
             <h3>Choose your workflow</h3>
-            <p>Select your default scenario, AI platform, response language, and toolbar style.</p>
+            <p>Select your default scenario, chat platform, Send Behavior, response language, and toolbar style.</p>
           </article>
           <article>
             <span>3</span>

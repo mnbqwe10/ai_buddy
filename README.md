@@ -28,7 +28,7 @@ Capture part of the current page, add a short instruction, and send the screensh
 
 AI Buddy is a Chrome extension that adds a selection toolbar for sending selected page text to an AI chat platform. It opens the platform in Chrome's side panel and uses reusable scenario actions such as Explain, Translate, Summarize, Draft Reply, Polish, Brainstorm, and Visualize.
 
-## What's New in v1.2.0
+## What's New in v1.2.2
 
 - Expanded starter Scenarios to 10: Learning, Workplace, Creative, Research, Writing, Coding, Marketing & Sales, Customer Support, Data Analysis, and Planning.
 - Added global instructions, pinned favorite Actions, and a **Transform** menu for tweet, table, mind map, Mermaid, checklist, quiz, flashcards, and user story outputs.
@@ -36,6 +36,9 @@ AI Buddy is a Chrome extension that adds a selection toolbar for sending selecte
 - Added Sensitive Data Warning for likely emails, phone numbers, API keys, street addresses, and financial numbers before sending selected text.
 - Added keyboard shortcuts for Enable/Disable Toolbar, Open Side Panel, Screenshot, and Next Scenario. View and edit them from the Options Page.
 - Added settings import/export, plus per-platform send behavior profiles such as auto-send, draft-only, paste-only, and open-side-panel-first.
+- Added **Send Behavior** to the side panel so platform sending mode is visible where prompts are delivered.
+- Simplified messaging auto-send: **Send Behavior** is now the single source of truth for ChatGPT, Claude, Gemini, DeepSeek, Copilot, WhatsApp, Telegram, and Discord.
+- Hardened Telegram Web send-control detection for current button markup.
 
 ## Important Notes
 
@@ -69,13 +72,13 @@ AI Buddy is a Chrome extension that adds a selection toolbar for sending selecte
 2. Choose an active **Scenario**, **Chat Platform**, and **Response Language**.
 3. Keep the selection toolbar enabled.
 4. Open a normal webpage, select text, then click an action button such as **Explain** or **Translate**.
-5. AI Buddy opens the side panel, drafts the prompt, and auto-sends it for AI chat platforms.
+5. AI Buddy opens the side panel, drafts the prompt, and sends or leaves it as a draft based on the active platform's **Send Behavior**.
 
-Messaging platforms such as WhatsApp, Telegram, and Discord draft prompts only unless **Allow auto-send** is switched on inside the side panel.
+Messaging platforms such as WhatsApp, Telegram, and Discord default to **Draft only**. Change **Send Behavior** to **Auto-send** in the side panel or Options page when you want AI Buddy to submit prompts automatically.
 
 ## Customize
 
-Open the extension options page to manage preferences, scenarios, reusable actions, pinned Actions, platform send behavior, global instructions, and import/export. Scenario action order controls the toolbar order. Editing a reusable action updates every scenario that uses it.
+Open the side panel for daily controls such as Platform, Send Behavior, and Scenario. Open the extension options page to manage preferences, scenarios, reusable actions, pinned Actions, platform send behavior, global instructions, and import/export. Scenario action order controls the toolbar order. Editing a reusable action updates every scenario that uses it.
 
 ## Keyboard Shortcuts
 
