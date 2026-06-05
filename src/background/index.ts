@@ -7,6 +7,24 @@ import { cropScreenshotDataUrl } from "./screenshotCapture";
 
 const promptRouter = createPromptRouter();
 
+async function clearTelegramSiteData() {
+  await chrome.browsingData.remove(
+    {
+      origins: ["https://web.telegram.org"],
+      originTypes: {
+        unprotectedWeb: true,
+      },
+    },
+    {
+      appcache: true,
+      cacheStorage: true,
+      fileSystems: true,
+      indexedDB: true,
+      serviceWorkers: true,
+    },
+  );
+}
+
 function installPlatformFrameRules() {
   const rules = platformFrameRules();
   void chrome.declarativeNetRequest
@@ -111,6 +129,17 @@ async function captureScreenshotRegion(message: Extract<RuntimeMessage, { type: 
 chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendResponse) => {
   if (!message) {
     return;
+  }
+
+  if (message.type === "prepare-telegram-frame") {
+    void clearTelegramSiteData()
+      .then(() => sendResponse({ ok: true }))
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn("[AI Buddy] Unable to prepare Telegram frame", error);
+        sendResponse({ ok: false, error: errorMessage });
+      });
+    return true;
   }
 
   if (message.type === "open-side-panel") {
