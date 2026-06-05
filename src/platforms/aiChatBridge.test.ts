@@ -106,6 +106,47 @@ describe("AI chat bridge", () => {
     expect(clickSend).toHaveBeenCalledTimes(1);
   });
 
+  it("repastes Claude composer text when direct drafting does not enable send", async () => {
+    vi.useFakeTimers();
+
+    const composer = document.createElement("div");
+    composer.setAttribute("contenteditable", "true");
+    composer.setAttribute("role", "textbox");
+    composer.setAttribute("aria-label", "Message Claude");
+    const sendButton = document.createElement("button");
+    sendButton.setAttribute("aria-label", "Send");
+    sendButton.disabled = true;
+    let editorState = "";
+
+    composer.addEventListener("beforeinput", (event) => {
+      const inputEvent = event as InputEvent;
+      if (inputEvent.inputType === "insertText") {
+        event.preventDefault();
+        composer.textContent = inputEvent.data;
+      }
+    });
+    composer.addEventListener("paste", (event) => {
+      const text = event.clipboardData?.getData("text/plain") ?? "";
+      editorState = text;
+      composer.textContent = text;
+      sendButton.disabled = false;
+      event.preventDefault();
+    });
+    sendButton.addEventListener("click", () => {
+      if (editorState) {
+        composer.textContent = "";
+      }
+    });
+    document.body.append(composer, sendButton);
+
+    const resultPromise = injectPrompt("Ask Claude", true);
+    await vi.advanceTimersByTimeAsync(1_500);
+    const result = await resultPromise;
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(composer.textContent).toBe("");
+  });
+
   it("sends when an image paste is accepted before drafting text", async () => {
     vi.stubGlobal(
       "DataTransfer",
@@ -173,7 +214,10 @@ describe("AI chat bridge", () => {
 
     composer.addEventListener("paste", pasteSeen);
     fileInput.addEventListener("change", fileInputChanged);
-    sendButton.addEventListener("click", clickSend);
+    sendButton.addEventListener("click", () => {
+      clickSend();
+      composer.textContent = "";
+    });
     document.body.append(composer, fileInput, sendButton);
 
     const resultPromise = injectPrompt("Review the screenshot", true, [imageAttachment()]);
@@ -183,7 +227,7 @@ describe("AI chat bridge", () => {
     expect(result).toEqual({ ok: true, mode: "sent", attachmentDelivery: "attached" });
     expect(fileInputChanged).toHaveBeenCalledTimes(1);
     expect(pasteSeen).not.toHaveBeenCalled();
-    expect(composer.textContent).toBe("Review the screenshot");
+    expect(composer.textContent).toBe("");
     expect(clickSend).toHaveBeenCalledTimes(1);
   });
 

@@ -131,6 +131,113 @@ function dispatchTextInputEvent(
   return element.dispatchEvent(event);
 }
 
+function selectComposerContents(composer: HTMLElement) {
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(composer);
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
+
+function createClipboardData(text: string): DataTransfer {
+  if (typeof DataTransfer === "function") {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", text);
+    return clipboardData;
+  }
+
+  const data = new Map<string, string>([["text/plain", text]]);
+  return {
+    dropEffect: "none",
+    effectAllowed: "uninitialized",
+    files: [] as unknown as FileList,
+    items: [] as unknown as DataTransferItemList,
+    types: ["text/plain"],
+    clearData: (format?: string) => {
+      if (format) {
+        data.delete(format);
+      } else {
+        data.clear();
+      }
+    },
+    getData: (format: string) => data.get(format) ?? "",
+    setData: (format: string, value: string) => {
+      data.set(format, value);
+    },
+    setDragImage: () => {},
+  } as DataTransfer;
+}
+
+function createPasteEvent(text: string) {
+  const clipboardData = createClipboardData(text);
+  const event = (typeof ClipboardEvent === "function"
+    ? new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData,
+      })
+    : new Event("paste", { bubbles: true, cancelable: true })) as ClipboardEvent;
+
+  if (!event.clipboardData) {
+    Object.defineProperty(event, "clipboardData", {
+      configurable: true,
+      value: clipboardData,
+    });
+  }
+
+  return event;
+}
+
+function normalizeComposerText(text: string) {
+  return text.replace(/\u200B/g, "").trim();
+}
+
+function getComposerText(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
+    return composer.value;
+  }
+
+  return composer.textContent ?? "";
+}
+
+function composerContainsPrompt(
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+) {
+  return normalizeComposerText(getComposerText(composer)).includes(normalizeComposerText(promptText));
+}
+
+function composerLooksLikeClaudeComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
+  if (isClaudePage()) {
+    return true;
+  }
+
+  if (!(composer instanceof HTMLElement)) {
+    return false;
+  }
+
+  const label = `${composer.getAttribute("aria-label") ?? ""} ${composer.getAttribute("data-placeholder") ?? ""}`
+    .trim()
+    .toLowerCase();
+  return label.includes("claude");
+}
+
+function pasteComposerText(composer: HTMLElement, promptText: string) {
+  selectComposerContents(composer);
+  composer.dispatchEvent(createPasteEvent(promptText));
+
+  if (
+    !composerContainsPrompt(composer, promptText) &&
+    typeof document.execCommand === "function"
+  ) {
+    selectComposerContents(composer);
+    document.execCommand("insertText", false, promptText);
+  }
+
+  dispatchTextInputEvent(composer, "input", "insertFromPaste", promptText);
+  return composerContainsPrompt(composer, promptText);
+}
+
 function setComposerText(
   composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
   promptText: string,
@@ -145,11 +252,7 @@ function setComposerText(
   }
 
   if (composer.isContentEditable || composer.hasAttribute("contenteditable")) {
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(composer);
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+    selectComposerContents(composer);
 
     const shouldInsert = dispatchTextInputEvent(composer, "beforeinput", "insertText", promptText);
     const inserted =
@@ -250,26 +353,27 @@ function findSendButton(doc = document): HTMLElement | null {
   );
 }
 
-async function waitForSendButton(doc = document) {
-  const deadline = Date.now() + sendButtonWaitMs;
-  const discoveryDeadline = Date.now() + sendButtonDiscoveryWaitMs;
+async function waitForSendButton(doc = document, maximumWaitMs = sendButtonWaitMs) {
+  const deadline = Date.now() + maximumWaitMs;
+  const discoveryDeadline = Date.now() + Math.min(sendButtonDiscoveryWaitMs, maximumWaitMs);
   let sawCandidate = false;
 
   while (Date.now() <= deadline) {
-    sawCandidate = sawCandidate || findSendButtonCandidates(doc).length > 0;
+    const candidates = findSendButtonCandidates(doc);
+    sawCandidate = sawCandidate || candidates.length > 0;
     const button = findSendButton(doc);
     if (button) {
-      return button;
+      return { button, sawCandidate: true };
     }
 
     if (!sawCandidate && Date.now() > discoveryDeadline) {
-      return null;
+      return { button: null, sawCandidate };
     }
 
     await delay(sendButtonPollMs);
   }
 
-  return null;
+  return { button: null, sawCandidate };
 }
 
 function dispatchEnter(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
@@ -298,19 +402,73 @@ function activateControl(control: HTMLElement) {
   }
 }
 
-async function submitComposer(composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement) {
-  const control = await waitForSendButton();
-  if (control) {
-    activateControl(control);
+async function waitForPromptToLeaveComposer(
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+) {
+  const deadline = Date.now() + 500;
+
+  while (Date.now() <= deadline) {
+    if (!composer.isConnected || !composerContainsPrompt(composer, promptText)) {
+      return true;
+    }
+
+    await delay(sendButtonPollMs);
+  }
+
+  return false;
+}
+
+async function activateSendControl(
+  control: HTMLElement,
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+  verifySend: boolean,
+) {
+  activateControl(control);
+  if (!verifySend || (await waitForPromptToLeaveComposer(composer, promptText))) {
     return true;
   }
 
-  if (findSendButtonCandidates().length > 0) {
+  if (typeof control.click === "function") {
+    control.click();
+    if (await waitForPromptToLeaveComposer(composer, promptText)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function submitComposer(
+  composer: HTMLElement | HTMLTextAreaElement | HTMLInputElement,
+  promptText: string,
+) {
+  const verifySend = composerLooksLikeClaudeComposer(composer);
+  let { button, sawCandidate } = await waitForSendButton(document, verifySend ? 750 : sendButtonWaitMs);
+  if (button && (await activateSendControl(button, composer, promptText, verifySend))) {
+    return true;
+  }
+
+  if (
+    verifySend &&
+    composer instanceof HTMLElement &&
+    (composer.isContentEditable || composer.hasAttribute("contenteditable"))
+  ) {
+    if (pasteComposerText(composer, promptText)) {
+      ({ button, sawCandidate } = await waitForSendButton());
+      if (button && (await activateSendControl(button, composer, promptText, true))) {
+        return true;
+      }
+    }
+  }
+
+  if (sawCandidate) {
     return false;
   }
 
   dispatchEnter(composer);
-  return true;
+  return !verifySend || (await waitForPromptToLeaveComposer(composer, promptText));
 }
 
 export async function injectPrompt(
@@ -341,7 +499,7 @@ export async function injectPrompt(
   const effectiveAttachmentDelivery =
     attachmentDelivery === "attached" && attachmentUploadResult === "failed" ? "manualUpload" : attachmentDelivery;
   const shouldSubmit = submit && effectiveAttachmentDelivery !== "manualUpload";
-  if (shouldSubmit && !(await submitComposer(composer))) {
+  if (shouldSubmit && !(await submitComposer(composer, promptText))) {
     return { ok: false, error: "Prompt drafted, but the send button was not ready." };
   }
 
