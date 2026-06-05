@@ -7,23 +7,41 @@ import { cropScreenshotDataUrl } from "./screenshotCapture";
 
 const promptRouter = createPromptRouter();
 
-function installPlatformFrameRules() {
-  const rules = platformFrameRules();
-  return chrome.declarativeNetRequest.updateDynamicRules({
-    addRules: rules,
-    removeRuleIds: rules.map((rule) => rule.id),
-  });
+async function clearTelegramSiteData() {
+  await chrome.browsingData.remove(
+    {
+      origins: ["https://web.telegram.org"],
+      originTypes: {
+        unprotectedWeb: true,
+      },
+    },
+    {
+      appcache: true,
+      cacheStorage: true,
+      fileSystems: true,
+      indexedDB: true,
+      serviceWorkers: true,
+    },
+  );
 }
 
-void installPlatformFrameRules().catch((error) => {
-  console.warn("[AI Buddy] Unable to install platform frame rules", error);
-});
+function installPlatformFrameRules() {
+  const rules = platformFrameRules();
+  void chrome.declarativeNetRequest
+    .updateDynamicRules({
+      addRules: rules,
+      removeRuleIds: rules.map((rule) => rule.id),
+    })
+    .catch((error) => {
+      console.warn("[AI Buddy] Unable to install platform frame rules", error);
+    });
+}
+
+installPlatformFrameRules();
 
 chrome.runtime.onInstalled.addListener(() => {
   ensureAppState();
-  void installPlatformFrameRules().catch((error) => {
-    console.warn("[AI Buddy] Unable to install platform frame rules", error);
-  });
+  installPlatformFrameRules();
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 });
 
@@ -114,7 +132,7 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, sender, sendRespo
   }
 
   if (message.type === "prepare-telegram-frame") {
-    void installPlatformFrameRules()
+    void clearTelegramSiteData()
       .then(() => sendResponse({ ok: true }))
       .catch((error: unknown) => {
         const errorMessage = error instanceof Error ? error.message : String(error);

@@ -10,6 +10,7 @@
   "permissions": [
     "storage",
     "sidePanel",
+    "browsingData",
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess"
   ],
