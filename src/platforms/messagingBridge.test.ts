@@ -240,6 +240,94 @@ describe("messaging bridge", () => {
     expect(realComposer.textContent).toBe("");
   });
 
+  it("clicks Telegram's icon-only send control after drafting", async () => {
+    const container = document.createElement("div");
+    container.className = "input-message-container";
+
+    const composer = document.createElement("div");
+    composer.setAttribute("contenteditable", "true");
+    composer.setAttribute("data-peer-id", "8738912168");
+    composer.className = "input-message-input scrollable scrollable-y no-scrollbar";
+    markVisible(composer);
+
+    const sendButton = document.createElement("button");
+    sendButton.className = "btn-icon rp";
+    markVisible(sendButton);
+
+    const sendIcon = document.createElement("span");
+    sendIcon.className = "icon-send";
+    markVisible(sendIcon);
+    sendButton.append(sendIcon);
+
+    const clickSend = vi.fn(() => {
+      composer.textContent = "";
+    });
+    sendButton.addEventListener("click", clickSend);
+
+    container.append(composer, sendButton);
+    document.body.append(container);
+
+    const result = await injectPrompt("Send through Telegram icon", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(clickSend).toHaveBeenCalledTimes(1);
+    expect(composer.textContent).toBe("");
+  });
+
+  it("clicks Telegram Web's main send button with alternate action icons", async () => {
+    const container = document.createElement("div");
+    container.className = "input-message-container";
+
+    const composer = document.createElement("div");
+    composer.setAttribute("contenteditable", "true");
+    composer.setAttribute("data-peer-id", "8738912168");
+    composer.className = "input-message-input scrollable scrollable-y no-scrollbar";
+    markVisible(composer);
+
+    const sendButton = document.createElement("button");
+    sendButton.type = "button";
+    sendButton.className = "Button send main-button default secondary round click-allowed";
+    sendButton.setAttribute("aria-label", "Send Message");
+    sendButton.setAttribute("title", "Send Message");
+    markVisible(sendButton);
+
+    for (const iconName of ["icon-send", "icon-microphone-alt", "icon-schedule", "icon-check"]) {
+      const icon = document.createElement("i");
+      icon.className = `icon ${iconName}`;
+      icon.setAttribute("aria-hidden", "true");
+      sendButton.append(icon);
+    }
+
+    const paidStarsBadge = document.createElement("button");
+    paidStarsBadge.type = "button";
+    paidStarsBadge.className = "Button paidStarsBadge hidden tiny stars pill fluid disabled non-interactive";
+    const paidStarsBadgeText = document.createElement("div");
+    paidStarsBadgeText.className = "paidStarsBadgeText";
+    const starIcon = document.createElement("i");
+    starIcon.className = "icon icon-star";
+    starIcon.setAttribute("aria-hidden", "true");
+    const starCount = document.createElement("span");
+    starCount.className = "tgKbsVmz";
+    starCount.textContent = "0";
+    paidStarsBadgeText.append(starIcon, starCount);
+    paidStarsBadge.append(paidStarsBadgeText);
+    sendButton.append(paidStarsBadge);
+
+    const clickSend = vi.fn(() => {
+      composer.textContent = "";
+    });
+    sendButton.addEventListener("click", clickSend);
+
+    container.append(composer, sendButton);
+    document.body.append(container);
+
+    const result = await injectPrompt("Send through Telegram main button", true);
+
+    expect(result).toEqual({ ok: true, mode: "sent" });
+    expect(clickSend).toHaveBeenCalledTimes(1);
+    expect(composer.textContent).toBe("");
+  });
+
   it("uses paste semantics for Discord Slate editors", async () => {
     const composer = createDiscordSlateComposer();
 

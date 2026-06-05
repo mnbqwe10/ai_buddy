@@ -374,12 +374,21 @@ function rawSendControlCandidates(doc = document): HTMLElement[] {
     "button.Button.send",
     ".btn-send",
     ".Button.send",
+    "button .icon-send",
+    "[role='button'] .icon-send",
+    ".btn-icon .icon-send",
+    "button .tgico-send",
+    "[role='button'] .tgico-send",
+    ".btn-icon .tgico-send",
+    "button [data-icon*='send' i]",
+    "[role='button'] [data-icon*='send' i]",
+    ".btn-icon [data-icon*='send' i]",
   ];
   const candidates = new Set<HTMLElement>();
 
   for (const selector of selectors) {
     for (const element of doc.querySelectorAll<HTMLElement>(selector)) {
-      candidates.add(element.closest<HTMLElement>("button,[role='button']") ?? element);
+      candidates.add(element.closest<HTMLElement>("button,[role='button'],.btn-icon") ?? element);
     }
   }
 
