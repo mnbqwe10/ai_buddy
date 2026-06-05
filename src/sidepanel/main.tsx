@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { createDefaultAppState } from "../domain/defaults";
 import { resolveSendMode, sendBehaviorStatusLabel } from "../domain/sendPolicy";
 import { sidePanelPortName } from "../background/promptRouter";
+import type { PlatformSendBehavior } from "../domain/model";
 import type { PendingPrompt, RuntimeMessage } from "../shared/messages";
 import { appLogoPath } from "../shared/app";
 import { useAppState } from "../shared/useAppState";
@@ -22,7 +23,7 @@ function isDeliverPromptMessage(message: unknown): message is Extract<RuntimeMes
 }
 
 function SidePanelApp() {
-  const { state, isLoading, setSettings } = useAppState();
+  const { state, isLoading, setSettings, replaceState } = useAppState();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const requestCounterRef = useRef(0);
   const inflightPromptsRef = useRef(new Map<string, PendingPrompt>());
@@ -30,7 +31,6 @@ function SidePanelApp() {
   const [isIframeReady, setIsIframeReady] = useState(false);
   const [isBridgeReady, setIsBridgeReady] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<PendingPrompt | null>(null);
-  const [allowAutoSend, setAllowAutoSend] = useState(false);
   const [isPlatformFramePrepared, setIsPlatformFramePrepared] = useState(true);
   const effectiveState = state ?? createDefaultAppState();
 
@@ -46,8 +46,20 @@ function SidePanelApp() {
   const platformMessageOrigin = messageOriginForPlatformUrl(activePlatform.url);
   const sendMode = resolveSendMode({
     platform: activePlatform,
-    allowAutoSend,
   });
+
+  async function updateActivePlatformSendBehavior(sendBehavior: PlatformSendBehavior) {
+    if (!state) {
+      return;
+    }
+
+    await replaceState({
+      ...state,
+      platforms: state.platforms.map((platform) =>
+        platform.id === activePlatform.id ? { ...platform, sendBehavior } : platform,
+      ),
+    });
+  }
 
   const pingBridge = useCallback(() => {
     if (!iframeRef.current?.contentWindow || !canUseBridge) {
@@ -115,7 +127,6 @@ function SidePanelApp() {
   useEffect(() => {
     setIsIframeReady(false);
     setIsBridgeReady(false);
-    setAllowAutoSend(false);
     setStatus(`Loading ${activePlatform.name}...`);
     setIsPlatformFramePrepared(activePlatform.id !== "telegram");
 
@@ -211,25 +222,8 @@ function SidePanelApp() {
 
   return (
     <main className="sidepanel-shell">
-      <section className={`compact-control-panel ${activePlatform.type === "messaging" ? "has-auto-send" : ""}`}>
+      <section className="compact-control-panel">
         <img className="sidepanel-logo" src={appLogoPath} alt="AI Buddy" />
-        {activePlatform.type === "messaging" && (
-          <label className="auto-send-switch">
-            <span>Allow auto-send</span>
-            <span className="switch-control">
-              <input
-                aria-label="Allow auto-send"
-                role="switch"
-                type="checkbox"
-                checked={allowAutoSend}
-                onChange={(event) => setAllowAutoSend(event.target.checked)}
-              />
-              <span aria-hidden="true" className="switch-track">
-                <span className="switch-thumb" />
-              </span>
-            </span>
-          </label>
-        )}
         <label className="compact-field">
           <span>Platform</span>
           <select
@@ -254,6 +248,20 @@ function SidePanelApp() {
                 {scenario.name}
               </option>
             ))}
+          </select>
+        </label>
+        <label className="compact-field">
+          <span>Send Behavior</span>
+          <select
+            value={activePlatform.sendBehavior}
+            onChange={(event) =>
+              void updateActivePlatformSendBehavior(event.target.value as PlatformSendBehavior)
+            }
+          >
+            <option value="autoSubmit">Auto-send</option>
+            <option value="draftOnly">Draft only</option>
+            <option value="pasteOnly">Paste only</option>
+            <option value="openSidePanelFirst">Open side panel first</option>
           </select>
         </label>
       </section>

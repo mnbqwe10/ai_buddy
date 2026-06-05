@@ -4,19 +4,11 @@ export type SendMode = "autoSubmit" | "draftOnly";
 
 export interface SendPolicyInput {
   platform: ChatPlatform;
-  allowAutoSend?: boolean;
 }
 
-export function resolveSendMode({
-  platform,
-  allowAutoSend = false,
-}: SendPolicyInput): SendMode {
+export function resolveSendMode({ platform }: SendPolicyInput): SendMode {
   if (platform.sendBehavior !== "autoSubmit") {
     return "draftOnly";
-  }
-
-  if (platform.type === "messaging") {
-    return allowAutoSend ? "autoSubmit" : "draftOnly";
   }
 
   return "autoSubmit";
@@ -25,7 +17,7 @@ export function resolveSendMode({
 export function sendBehaviorStatusLabel(platform: ChatPlatform) {
   switch (platform.sendBehavior) {
     case "autoSubmit":
-      return platform.type === "messaging" ? "Auto-send when allowed" : "Auto-send";
+      return "Auto-send";
     case "pasteOnly":
       return "Paste only";
     case "openSidePanelFirst":

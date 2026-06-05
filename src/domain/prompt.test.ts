@@ -197,17 +197,11 @@ describe("send policy", () => {
     expect(resolveSendMode({ platform: { ...chatgpt, sendBehavior: "openSidePanelFirst" } })).toBe("draftOnly");
   });
 
-  it("drafts on Messaging Platforms unless Allow Auto-Send is enabled", () => {
+  it("uses Send Behavior as the source of truth for Messaging Platforms", () => {
     const state = createDefaultAppState();
     const whatsapp = state.platforms.find((platform) => platform.id === "whatsapp")!;
 
     expect(resolveSendMode({ platform: whatsapp })).toBe("draftOnly");
-    expect(resolveSendMode({ platform: whatsapp, allowAutoSend: true })).toBe("draftOnly");
-    expect(
-      resolveSendMode({
-        platform: { ...whatsapp, sendBehavior: "autoSubmit" },
-        allowAutoSend: true,
-      }),
-    ).toBe("autoSubmit");
+    expect(resolveSendMode({ platform: { ...whatsapp, sendBehavior: "autoSubmit" } })).toBe("autoSubmit");
   });
 });

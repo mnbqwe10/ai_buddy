@@ -45,14 +45,10 @@ p {
 
 .compact-control-panel {
   display: grid;
-  grid-template-columns: auto minmax(120px, 1fr) minmax(112px, 0.85fr);
+  grid-template-columns: auto minmax(110px, 1fr) minmax(110px, 0.85fr) minmax(132px, 0.95fr);
   align-items: end;
   gap: 6px;
   padding: 6px;
-}
-
-.compact-control-panel.has-auto-send {
-  grid-template-columns: auto auto minmax(120px, 1fr) minmax(112px, 0.85fr);
 }
 
 .sidepanel-logo {
@@ -72,69 +68,6 @@ p {
 .compact-control-panel select {
   width: 100%;
   font-size: 12px;
-}
-
-.auto-send-switch {
-  display: grid;
-  justify-items: start;
-  gap: 3px;
-  color: #465066;
-  font-size: 11px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.switch-control {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
-}
-
-.switch-control input {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.switch-track {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-  width: 38px;
-  height: 22px;
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  background: #e2e8f0;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.switch-thumb {
-  position: absolute;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.24);
-  transition: transform 120ms ease;
-}
-
-.switch-control input:checked + .switch-track {
-  border-color: #059669;
-  background: #059669;
-}
-
-.switch-control input:checked + .switch-track .switch-thumb {
-  transform: translateX(16px);
-}
-
-.switch-control input:focus-visible + .switch-track {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
 }
 
 .chat-frame-panel {
@@ -173,14 +106,10 @@ p {
 
 @media (max-width: 520px) {
   .compact-control-panel {
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .compact-control-panel.has-auto-send {
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .auto-send-switch {
-    grid-column: 2 / -1;
+  .sidepanel-logo {
+    display: none;
   }
 }
