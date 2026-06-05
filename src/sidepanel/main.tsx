@@ -238,19 +238,6 @@ function SidePanelApp() {
           </select>
         </label>
         <label className="compact-field">
-          <span>Scenario</span>
-          <select
-            value={effectiveState.settings.activeScenarioId}
-            onChange={(event) => setSettings({ activeScenarioId: event.target.value })}
-          >
-            {effectiveState.scenarios.map((scenario) => (
-              <option key={scenario.id} value={scenario.id}>
-                {scenario.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="compact-field">
           <span>Send Behavior</span>
           <select
             value={activePlatform.sendBehavior}
@@ -262,6 +249,19 @@ function SidePanelApp() {
             <option value="draftOnly">Draft only</option>
             <option value="pasteOnly">Paste only</option>
             <option value="openSidePanelFirst">Open side panel first</option>
+          </select>
+        </label>
+        <label className="compact-field">
+          <span>Scenario</span>
+          <select
+            value={effectiveState.settings.activeScenarioId}
+            onChange={(event) => setSettings({ activeScenarioId: event.target.value })}
+          >
+            {effectiveState.scenarios.map((scenario) => (
+              <option key={scenario.id} value={scenario.id}>
+                {scenario.name}
+              </option>
+            ))}
           </select>
         </label>
       </section>
